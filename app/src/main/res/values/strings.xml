@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">GLCC-Client</string>
+    <string name="login_name">Cat Cat</string>
+    <string name="logo_image_transition_name">logo_image</string>
+    <string name="logo_text_transition_name">logo_text</string>
+    <string name="desc_text_transition_name">desc_text</string>
+    <string name="username_text_transition_name">username_edit</string>
+    <string name="password_text_transition_name">password_edit</string>
+    <string name="go_btn_transition_name">go_btn</string>
+    <string name="register_text_transition_name">register_text</string>
+    <string name="login_image_description">A cat for logo</string>
+    <string name="skip_name">Skip</string>
+    <string name="app_describe">A Cat Detection app</string>
+    <string name="login_hello">Hello there, Welcome Back</string>
+    <string name="register_hello">Welcome</string>
+    <string name="login_continue">Sign in to continue</string>
+    <string name="signup_continue">SignUp to start your new journey</string>
+    <string name="hint_username">Username</string>
+    <string name="hint_nikename">Nikename</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_password_repeat">Password again</string>
+    <string name="button_forget_password">Forget Password?</string>
+    <string name="button_go">GO</string>
+    <string name="button_sign_up_skip">New User? SIGN UP</string>
+    <string name="button_go_signin">GO BACK SIGN IN</string>
+    <string name="button_register">REGISTER</string>
+</resources>

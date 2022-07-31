@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/plane_theme"
+    android:padding="10dp"
+    android:orientation="vertical">
+    <Button
+        android:id="@+id/txt_btn_skip"
+        android:layout_width="50dp"
+        android:layout_height="30dp"
+        android:text="@string/skip_name"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_gravity="end"
+        android:textSize="10sp"
+        android:background="@drawable/bg_splash_skip_v2"
+        android:visibility="invisible"/>
+    <ImageView
+        android:id="@+id/imageview_log"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="140dp"
+        android:src="@drawable/toyger_cat"
+        android:transitionName="@string/logo_image_transition_name"
+        android:contentDescription="@string/login_image_description" />
+
+    <TextView
+        android:id="@+id/txt_view_app_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="130dp"
+        android:fontFamily="@font/brokt"
+        android:text="@string/login_name"
+        android:textColor="#4d2600"
+        android:transitionName="@string/logo_text_transition_name"
+        android:textSize="70sp"/>
+
+    <TextView
+        android:id="@+id/txt_view_app_describe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="5dp"
+        android:fontFamily="@font/babycake"
+        android:transitionName="@string/desc_text_transition_name"
+        android:text="@string/app_describe"
+        android:textSize="18sp" />
+
+
+</LinearLayout>
