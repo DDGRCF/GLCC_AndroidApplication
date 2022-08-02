@@ -16,10 +16,11 @@
         <entry key="app/src/main/res/drawable/bg_username.xml" value="0.221" />
         <entry key="app/src/main/res/drawable/bg_video_loading.xml" value="0.1885" />
         <entry key="app/src/main/res/drawable/bg_video_toolbar_view.xml" value="0.2215" />
+        <entry key="app/src/main/res/drawable/videoplayer_content_bg.xml" value="0.1" />
         <entry key="app/src/main/res/font/banger.xml" value="0.24479166666666666" />
         <entry key="app/src/main/res/layout-v28/activity_show_video.xml" value="0.21458333333333332" />
         <entry key="app/src/main/res/layout/activity_dask_board.xml" value="0.1" />
-        <entry key="app/src/main/res/layout/activity_login.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/activity_login.xml" value="0.25" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.2111111111111111" />
         <entry key="app/src/main/res/layout/activity_register.xml" value="0.1" />
         <entry key="app/src/main/res/layout/activity_seek_acounts.xml" value="0.1899696048632219" />

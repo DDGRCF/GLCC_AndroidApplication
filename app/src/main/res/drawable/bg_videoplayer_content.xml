@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="135"
+        android:endColor="@color/videoplayer_content_end_color"
+        android:startColor="@color/videoplayer_content_start_color"/>
+</shape>

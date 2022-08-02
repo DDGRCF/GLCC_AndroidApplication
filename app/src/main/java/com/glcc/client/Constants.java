@@ -30,4 +30,13 @@ public class Constants {
     public static final boolean USE_TEMPLATE_VIDEO_URL = true;
     public static final String GLCC_DEFAULT_VIDEO_NAME = "test";
     public static final String GLCC_PULL_VIDEO_BASE_URL = "http://192.168.199.120:7001/live";
+
+    // Video URL Status
+    public static final int PLAY_STATUS_SUCCESS                 = 0;
+    public static final int PLAY_STATUS_EMPTY_URL               = -1;
+    public static final int PLAY_STATUS_INVALID_URL             = -2;
+    public static final int play_status_invalid_play_type       = -4;
+
+
+
 }

@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@color/plane_theme"
+    android:background="@color/main_theme"
     android:padding="10dp"
     android:orientation="vertical">
     <androidx.appcompat.widget.Toolbar
@@ -14,10 +14,12 @@
     </androidx.appcompat.widget.Toolbar>
 
     <RelativeLayout
+        android:id="@+id/video_layout_root"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp">
         <ImageView
+            android:id="@+id/video_play_logo"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_centerInParent="true"
@@ -35,6 +37,7 @@
             android:layout_alignBottom="@id/video_view"
             android:background="@drawable/bg_video_toolbar_view"
             android:padding="10dp">
+
             <ImageButton
                 android:id="@+id/video_play_btn"
                 android:layout_width="25dp"
@@ -42,7 +45,7 @@
                 android:layout_alignParentStart="true"
                 android:layout_marginStart="10dp"
                 android:background="@drawable/play_button"
-                android:scaleType="fitCenter"/>
+                android:scaleType="fitCenter" />
             <ImageButton
                 android:id="@+id/video_play_wide"
                 android:layout_width="25dp"

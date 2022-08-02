@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".Login"
     android:orientation="vertical"
-    android:background="@color/plane_theme"
+    android:background="@color/main_theme"
     android:padding="20dp">
     <ImageView
         android:id="@+id/login_logo"

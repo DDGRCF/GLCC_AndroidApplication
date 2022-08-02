@@ -1,6 +1,7 @@
 package com.glcc.client;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.ContentInfoCompat;
 
@@ -9,8 +10,10 @@ import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
@@ -50,6 +53,7 @@ public class Login extends AppCompatActivity {
     private Handler handler;
 
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +61,7 @@ public class Login extends AppCompatActivity {
 //        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 //                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+//        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         mImageViewLog = findViewById(R.id.login_logo);
         mTxtViewAppWeclome = findViewById(R.id.weclome_back_txt);
         mTxtViewAppContinue = findViewById(R.id.continue_back_txt);
@@ -142,6 +147,10 @@ public class Login extends AppCompatActivity {
                                     mTxtEditUsername.setText("");
                                     mTxtEditPassword.setText("");
                                     Intent intent = new Intent(Login.this, ShowVideo.class);
+                                    Bundle bundle = new Bundle();
+                                    bundle.putString("login_username", login_username);
+                                    bundle.putString("login_password", login_password);
+                                    intent.putExtra("bundle", bundle);
                                     startActivity(intent);
                                 });
                                 Log.d("Login", response.body().toString());
