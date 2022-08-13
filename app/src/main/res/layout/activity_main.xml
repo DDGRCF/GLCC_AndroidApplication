@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/plane_theme"
@@ -34,7 +35,7 @@
         android:layout_marginTop="130dp"
         android:fontFamily="@font/brokt"
         android:text="@string/login_name"
-        android:textColor="#4d2600"
+        android:textColor="@color/start_login_font"
         android:transitionName="@string/logo_text_transition_name"
         android:textSize="70sp"/>
 

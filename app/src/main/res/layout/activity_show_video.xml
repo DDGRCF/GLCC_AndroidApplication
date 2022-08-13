@@ -1,23 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/show_video_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/main_theme"
-    android:padding="10dp"
+    android:padding="8dp"
     android:orientation="vertical">
     <androidx.appcompat.widget.Toolbar
+        android:id="@+id/video_show_toolbar"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        app:navigationIcon="@drawable/menu"
-        android:background="@drawable/bg_toolbar">
+        app:contentInsetStartWithNavigation="0dp"
+        app:navigationIcon="@drawable/more">
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textSize="13sp"
+                android:hint="Search"/>
+        </com.google.android.material.textfield.TextInputLayout>
     </androidx.appcompat.widget.Toolbar>
+    <TextView
+        android:id="@+id/video_show_info_bar"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_gravity="center"
+        android:padding="5dp"
+        android:text="none"
+        android:textSize="15sp"/>
 
     <RelativeLayout
-        android:id="@+id/video_layout_root"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="15dp">
+        android:id="@+id/video_show_layout_root"
+        android:layout_width="match_parent"
+        android:layout_height="280dp"
+        android:layout_marginTop="5dp"
+        android:layout_gravity="center_vertical"
+        android:background="@drawable/bg_video_show_root_layout"
+        android:padding="2dp">
+
         <ImageView
             android:id="@+id/video_play_logo"
             android:layout_width="48dp"
@@ -28,14 +53,15 @@
         <com.tencent.rtmp.ui.TXCloudVideoView
             android:id="@+id/video_view"
             android:layout_width="match_parent"
-            android:layout_height="240dp"
-            android:layout_centerInParent="true"
-            android:background="@drawable/bg_txcloud_view" />
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true" />
+
         <RelativeLayout
+            android:id="@+id/video_show_play_tool_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/video_view"
-            android:background="@drawable/bg_video_toolbar_view"
+            android:layout_alignParentBottom="true"
+            android:background="@drawable/bg_video_show_player_tool_bar"
             android:padding="10dp">
 
             <ImageButton
@@ -46,24 +72,162 @@
                 android:layout_marginStart="10dp"
                 android:background="@drawable/play_button"
                 android:scaleType="fitCenter" />
+
             <ImageButton
                 android:id="@+id/video_play_wide"
                 android:layout_width="25dp"
                 android:layout_height="25dp"
                 android:layout_alignParentEnd="true"
                 android:layout_marginEnd="10dp"
-                android:background="@drawable/wide"/>
-
+                android:background="@drawable/wide" />
         </RelativeLayout>
 
         <ImageView
             android:id="@+id/video_loading"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
             android:layout_centerInParent="true"
             android:src="@drawable/bg_video_loading"
             android:visibility="gone"/>
+
+        <RelativeLayout
+            android:id="@+id/video_show_draw_layout_root"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <com.glcc.client.DrawView
+                android:id="@+id/video_show_draw_canvas"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#00000000" />
+
+            <com.github.clans.fab.FloatingActionMenu
+                android:id="@+id/video_show_lattice_draw_menu"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:visibility="visible"
+                app:menu_colorNormal="#FF000000"
+                app:menu_fab_size="mini"
+                app:menu_showShadow="true"
+                tools:ignore="RelativeOverlap">
+
+                <com.github.clans.fab.FloatingActionButton
+                    android:id="@+id/video_show_lattice_draw_find"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/verify"
+                    app:fab_size="mini" />
+                <com.github.clans.fab.FloatingActionButton
+                    android:id="@+id/video_show_lattice_draw_redo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/redo_arrow_symbol"
+                    app:fab_size="mini"
+                    app:menu_colorNormal="#FF000000"/>
+
+                <com.github.clans.fab.FloatingActionButton
+                    android:id="@+id/video_show_lattice_draw_undo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/undo_circular_arrow"
+                    app:fab_size="mini"/>
+                <com.github.clans.fab.FloatingActionButton
+                    android:id="@+id/video_show_lattice_draw_clear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/trash"
+                    app:fab_size="mini"/>
+            </com.github.clans.fab.FloatingActionMenu>
+
+            <com.github.clans.fab.FloatingActionButton
+                android:id="@+id/video_show_lattice_draw_confirm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerInParent="true"
+                android:src="@drawable/check"
+                app:fab_size="mini"
+                android:visibility="gone"/>
+        </RelativeLayout>
     </RelativeLayout>
 
 
+    <RelativeLayout
+        android:id="@+id/video_source_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/bg_video_source_register"
+        android:elevation="6dp"
+        android:layout_gravity="center_vertical">
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="10dp">
+
+            <TextView
+                android:id="@+id/view_video_source_register"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:padding="5dp"
+                android:text="@string/video_source_register"
+                android:textColor="#FF000000"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/view_video_source_delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toRightOf="@+id/view_video_source_register"
+                android:padding="5dp"
+                android:text="@string/video_source_delete"
+                android:textColor="#FF000000"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/view_video_draw_lattice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toRightOf="@+id/view_video_source_delete"
+                android:padding="5dp"
+                android:text="DRAW"
+                android:textColor="#FF000000"
+                android:textSize="13sp" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="170dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_centerInParent="true"
+            android:paddingStart="10dp">
+
+            <Spinner
+                android:id="@+id/video_source_spinner"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerInParent="true"
+                android:spinnerMode="dropdown"
+                android:tooltipText="@string/video_source_title" />
+
+            <TextView
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="@string/video_source_title"
+                android:textColor="#FF000000"
+                android:textSize="13sp" />
+        </RelativeLayout>
+    </RelativeLayout>
 </LinearLayout>

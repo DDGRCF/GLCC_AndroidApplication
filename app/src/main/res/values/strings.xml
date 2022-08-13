@@ -24,4 +24,7 @@
     <string name="button_sign_up_skip">New User? SIGN UP</string>
     <string name="button_go_signin">GO BACK SIGN IN</string>
     <string name="button_register">REGISTER</string>
+    <string name="video_source_title">SOURCE:</string>
+    <string name="video_source_register">REGISTER</string>
+    <string name="video_source_delete">DELETE</string>
 </resources>

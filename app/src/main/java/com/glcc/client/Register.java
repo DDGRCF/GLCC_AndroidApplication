@@ -18,11 +18,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.blankj.utilcode.util.BarUtils;
+import com.blankj.utilcode.util.ClickUtils;
+import com.glcc.client.manager.UserModel;
 import com.google.android.material.textfield.TextInputEditText;
+import com.kongzue.dialogx.dialogs.WaitDialog;
 
 import net.sf.json.JSONObject;
-
-import org.w3c.dom.Text;
 
 import java.util.Objects;
 
@@ -44,6 +46,7 @@ public class Register extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        MyUtils.setMyStatusBar(Register.this);
         setContentView(R.layout.activity_register);
         mTxtEditUsername = findViewById(R.id.register_username_edit);
         mTxtEditNickname = findViewById(R.id.register_nickname_edit);
@@ -54,6 +57,7 @@ public class Register extends AppCompatActivity {
         mTxtViewAppContinue = findViewById(R.id.register_continue);
         mBtnRegister = findViewById(R.id.register_btn);
         mBtnGoBackSigIn = findViewById(R.id.goback_signin_btn);
+        BarUtils.addMarginTopEqualStatusBarHeight(mImageViewLog);
         InitRegister();
     }
 
@@ -83,10 +87,10 @@ public class Register extends AppCompatActivity {
         mBtnGoBackSigIn.setOnClickListener(onclick);
     }
 
-    protected class OnClick extends MUtils.NoShakeListener {
+    protected class OnClick extends ClickUtils.OnDebouncingClickListener {
         @SuppressLint("NonConstantResourceId")
         @Override
-        public void onSingleClick(@NonNull View view) {
+        public void onDebouncingClick(@NonNull View view) {
             switch (view.getId()) {
                 case R.id.register_btn: {
                     String register_username = Objects.requireNonNull(mTxtEditUsername.getText()).toString();
@@ -134,7 +138,9 @@ public class Register extends AppCompatActivity {
                     }
 
                     new Thread(()->{
+                        WaitDialog.show("Please Wait!");
                         Response response = GLCCClient.doCommonPost(Constants.GLCC_REGISTER_URL, register_infos.toString());
+                        WaitDialog.dismiss();
                         mBtnRegister.setClickable(false);
                         if (response == null) {
                             handler.post(()->{
@@ -150,9 +156,12 @@ public class Register extends AppCompatActivity {
                                     mTxtEditRePassword.setText("");
                                     Toast.makeText(Register.this, "Register Success", Toast.LENGTH_SHORT).show();
                                 });
-                                String sql_mysql = String.format("INSERT INTO User (username, password, nickname) VALUES (\"%s\", \"%s\", \"%s\");",
-                                        register_username, register_password, register_nickname);
-                                Login.db.execSQL(sql_mysql);
+                                UserModel userModel = new UserModel();
+                                userModel.setUserName(register_username);
+                                userModel.setPassword(register_password);
+                                userModel.setNickName(register_nickname);
+                                userModel.saveUserModel();
+                                UserModel t = UserModel.loadUserModel(register_username);
                             } else {
                                 handler.post(()->{
                                     mTxtEditUsername.requestFocus();
@@ -168,8 +177,6 @@ public class Register extends AppCompatActivity {
 
                 } case R.id.goback_signin_btn: {
                     handler.post(()->{
-//                        Intent intent = new Intent(Register.this, Login.class);
-//                        startActivity(intent);
                         mTransitionAnimation(Register.this, Login.class);
                     });
                     break;

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="video_source_spinner">
+        <item>null</item>
+    </string-array>
+</resources>

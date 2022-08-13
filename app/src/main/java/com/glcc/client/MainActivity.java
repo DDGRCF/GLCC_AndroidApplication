@@ -2,22 +2,20 @@ package com.glcc.client;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.Intent;
-import android.media.Image;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Pair;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
+import com.blankj.utilcode.util.BarUtils;
+import com.blankj.utilcode.util.ClickUtils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,11 +28,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Hide Bar
-//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-//                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        getWindow().setStatusBarColor(getResources().getColor(R.color.plane_theme));
+        MyUtils.setMyStatusBar(MainActivity.this);
         setContentView(R.layout.activity_main);
         // set values
         mTxtViewAppTitle = findViewById(R.id.txt_view_app_title);
@@ -43,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
         mTxtBtnSkip = findViewById(R.id.txt_btn_skip);
         mAnimationLog = AnimationUtils.loadAnimation(this, R.anim.animation_log);
         mAnimationTitleDesc = AnimationUtils.loadAnimation(this, R.anim.animation_titledesc);
+        BarUtils.addMarginTopEqualStatusBarHeight(mTxtBtnSkip);
         // Text AntiAlias
         InitSplash();
 
@@ -51,7 +46,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        finishAfterTransition();
+        finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        new Handler().removeCallbacksAndMessages(null);
     }
 
     private void mTransitionAnimation() {
@@ -66,9 +67,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void InitSplash() {
         mTxtBtnSkip.setClickable(false);
-        mTxtBtnSkip.setOnClickListener(new MUtils.NoShakeListener() {
+        mTxtBtnSkip.setOnClickListener(new ClickUtils.OnDebouncingClickListener() {
             @Override
-            protected void onSingleClick(View v) {
+            public void onDebouncingClick(View v) {
                 mTransitionAnimation();
             }
         });
