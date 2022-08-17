@@ -8,7 +8,7 @@ import java.util.Set;
 
 public class Constants {
     // Login
-    static int SPLASH_SCREEN = 5000;
+    static int SPLASH_SCREEN = 6000;
     static int DISSPLASH_SCREEN = 2500;
     // Server
     public static final String GLCC_SERVER_HOST = "https://192.168.199.120";
@@ -46,7 +46,7 @@ public class Constants {
 
     public static final boolean USE_TEMPLATE_VIDEO_URL = true;
     public static final String GLCC_DEFAULT_VIDEO_NAME = "test";
-    public static final String GLCC_VIDEO_PLAYER_BASE_URL = "http://192.168.199.120:7001/live";
+    public static final String GLCC_VIDEO_PLAYER_BASE_URL = "http://192.168.199.120:8080/live";
 
 
     // Video Type

@@ -18,6 +18,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
@@ -47,6 +49,7 @@ import com.kongzue.dialogx.interfaces.OnBackPressedListener;
 import com.kongzue.dialogx.interfaces.OnBindView;
 import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 import com.kongzue.dialogx.interfaces.OnMenuItemClickListener;
+import com.kongzue.dialogx.util.TextInfo;
 import com.tencent.live2.V2TXLiveDef;
 import com.tencent.live2.V2TXLivePlayer;
 import com.tencent.live2.V2TXLivePlayerObserver;
@@ -157,7 +160,7 @@ public class ShowVideo extends AppCompatActivity {
         public void onDebouncingClick(@NonNull View view) {
             switch (view.getId()) {
                 case R.id.view_video_source_register: {
-                    BottomDialog.show("Register Video Source", "Please enter your video information: ",
+                    BottomDialog.show("REGISTER VIDEO SOURCE", "Please enter your video information: ",
                                     new OnBindView<BottomDialog>(R.layout.video_source_register_dialog) {
                             @Override
                             public void onBind(BottomDialog dialog, View v) {
@@ -198,12 +201,11 @@ public class ShowVideo extends AppCompatActivity {
                                     register_video_info.put("user_name", userModel.getUserName());
                                     register_video_info.put("user_password", userModel.getPassword());
                                     ExecutorService executorService = Executors.newSingleThreadExecutor();
+                                    WaitDialog.show("Please wait...");
                                     Callable<Boolean> task = new Callable<Boolean>() {
                                         @Override
                                         public Boolean call() throws Exception {
-                                            WaitDialog.show("Please wait...");
                                             Response response = GLCCClient.doCommonPost(Constants.GLCC_REGISTER_VIDEO_URL, register_video_info.toString());
-                                            WaitDialog.dismiss();
                                             if (ObjectUtils.isEmpty(response)) {
                                                 handler.post(()->{
                                                     Toast.makeText(ShowVideo.this, "Request Error!", Toast.LENGTH_SHORT).show();
@@ -243,6 +245,7 @@ public class ShowVideo extends AppCompatActivity {
                                     } catch (ExecutionException | InterruptedException e) {
                                         e.printStackTrace();
                                     }
+                                    WaitDialog.dismiss();
                                     return state;
                                 }
                             }
@@ -256,7 +259,7 @@ public class ShowVideo extends AppCompatActivity {
                     break;
                 }
                 case R.id.view_video_source_delete: {
-                    BottomDialog.show("Delete Video Source", "Please Enter your video information:", new OnBindView<BottomDialog>(R.layout.video_source_delete_dialog) {
+                    BottomDialog.show("DELETE VIDEO SOURCE", "Please Enter your video information:", new OnBindView<BottomDialog>(R.layout.video_source_delete_dialog) {
                         @Override
                         public void onBind(BottomDialog dialog, View v) {
                         }
@@ -398,6 +401,7 @@ public class ShowVideo extends AppCompatActivity {
         private V2TXLiveDef.V2TXLiveFillMode mRenderMode =  V2TXLiveDef.V2TXLiveFillMode.V2TXLiveFillModeFit; // 长边填充
         private V2TXLiveDef.V2TXLiveRotation mRenderRotation = V2TXLiveDef.V2TXLiveRotation.V2TXLiveRotation0; // 旋转角度
         private android.view.ViewGroup.LayoutParams mVideoShowLayoutRootParam;
+        private Animation VideoLoadingAnimation;
         private boolean mIsPlaying = false;
         private boolean mIsWiding = false;
         private boolean mIsDrawing = false;
@@ -424,7 +428,9 @@ public class ShowVideo extends AppCompatActivity {
             mDrawViewMenuBtn = findViewById(R.id.video_show_lattice_draw_menu);
 
             mVideoShowLayoutRootParam = mVideoShowLayoutRoot.getLayoutParams();
+            VideoLoadingAnimation = AnimationUtils.loadAnimation(ShowVideo.this, R.anim.animation_loading);
         }
+
 
         private void initialize() {
             initPlayView();
@@ -465,6 +471,7 @@ public class ShowVideo extends AppCompatActivity {
         protected void startPlay() {
             int code;
             startLoadingAnimation();
+            mBtnVideoPlay.setClickable(false);
             if (!ObjectUtils.isEmpty(mSpinnerVideoSource.getSelectedItem())) {
                 String video_name = mSpinnerVideoSource.getSelectedItem().toString();
                 Log.d("ShowVideo", video_name);
@@ -491,6 +498,7 @@ public class ShowVideo extends AppCompatActivity {
             } else {
                 code = V2TXLIVE_ERROR_FAILED;
             }
+            mBtnVideoPlay.setClickable(true);
             mIsPlaying = code == V2TXLIVE_OK;
             onPlayStart(code);
         }
@@ -615,14 +623,14 @@ public class ShowVideo extends AppCompatActivity {
         protected void startLoadingAnimation() {
             if (mImageLoading != null) {
                 mImageLoading.setVisibility(View.VISIBLE);
-                ((AnimationDrawable) mImageLoading.getDrawable()).start();
+                mImageLoading.startAnimation(VideoLoadingAnimation);
             }
         }
 
         private void stopLoadingAnimation() {
-            if (mImageLoading != null) {
+            if (mImageLoading.getAnimation() != null) {
+                mImageLoading.clearAnimation();
                 mImageLoading.setVisibility(View.GONE);
-                ((AnimationDrawable) mImageLoading.getDrawable()).stop();
             }
         }
 

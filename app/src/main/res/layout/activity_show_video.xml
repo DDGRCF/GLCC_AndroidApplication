@@ -41,7 +41,7 @@
         android:layout_marginTop="5dp"
         android:layout_gravity="center_vertical"
         android:background="@drawable/bg_video_show_root_layout"
-        android:padding="2dp">
+        android:padding="1dp">
 
         <ImageView
             android:id="@+id/video_play_logo"
@@ -84,10 +84,10 @@
 
         <ImageView
             android:id="@+id/video_loading"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_centerInParent="true"
-            android:src="@drawable/bg_video_loading"
+            android:src="@drawable/loading"
             android:visibility="gone"/>
 
         <RelativeLayout

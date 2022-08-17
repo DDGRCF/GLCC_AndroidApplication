@@ -29,11 +29,11 @@
         <entry key="app/src/main/res/layout-v26/activity_show_video.xml" value="0.12462006079027356" />
         <entry key="app/src/main/res/layout-v28/activity_show_video.xml" value="0.21458333333333332" />
         <entry key="app/src/main/res/layout/activity_dask_board.xml" value="0.1" />
-        <entry key="app/src/main/res/layout/activity_login.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/activity_login.xml" value="0.67" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.33" />
         <entry key="app/src/main/res/layout/activity_register.xml" value="0.33" />
         <entry key="app/src/main/res/layout/activity_seek_acounts.xml" value="0.1899696048632219" />
-        <entry key="app/src/main/res/layout/activity_show_video.xml" value="0.22" />
+        <entry key="app/src/main/res/layout/activity_show_video.xml" value="0.67" />
         <entry key="app/src/main/res/layout/item_dialogx_material_context_menu_normal_text.xml" value="0.20949123557075675" />
         <entry key="app/src/main/res/layout/video_show_draw_confirm_edit.xml" value="0.17870884993587002" />
         <entry key="app/src/main/res/layout/video_show_draw_find_spinner.xml" value="0.19324497648567765" />

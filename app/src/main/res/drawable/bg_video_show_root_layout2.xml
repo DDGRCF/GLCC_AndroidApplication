@@ -7,7 +7,7 @@
         android:startColor="@color/videoplayer_content_end_color"/>
     <stroke
         android:width="2dp"
-        android:color="#999999"/>
+        android:color="#FF000000"/>
     <corners
         android:radius="2dp"/>
 </shape>
