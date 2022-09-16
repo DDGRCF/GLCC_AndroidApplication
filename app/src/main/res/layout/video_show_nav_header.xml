@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="180dp"
+    android:orientation="vertical"
+    android:background="@color/plane_theme"
+    android:paddingStart="20dp"
+    android:paddingTop="20dp"
+    android:paddingBottom="10dp"
+    android:paddingEnd="20dp"
+    android:padding="10dp">
+
+    <ImageView
+        android:id="@+id/nav_log_image"
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:layout_marginTop="40dp"
+        android:src="@drawable/toyger_cat" />
+    
+    <TextView
+        android:layout_marginTop="10dp"
+        android:layout_below="@id/nav_log_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/babycake"
+        android:text="Remember your cat"
+        android:textSize="18sp"/>
+
+    <TextView
+        android:id="@+id/video_show_nav_user_nickname"
+        android:layout_centerInParent="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/babycake"
+        android:text="Hello"
+        android:ellipsize="marquee"
+        android:textSize="24sp"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:layout_toRightOf="@id/nav_log_image"
+        android:layout_marginStart="10dp"
+        android:singleLine="true" />
+
+
+</RelativeLayout>

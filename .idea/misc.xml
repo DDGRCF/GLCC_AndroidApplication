@@ -16,11 +16,13 @@
         <entry key="app/src/main/res/drawable/bg_username.xml" value="0.221" />
         <entry key="app/src/main/res/drawable/bg_video_info_signal.xml" value="0.139" />
         <entry key="app/src/main/res/drawable/bg_video_loading.xml" value="0.1885" />
+        <entry key="app/src/main/res/drawable/bg_video_nav_item.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/bg_video_show_player_tool_bar.xml" value="0.2245" />
         <entry key="app/src/main/res/drawable/bg_video_show_root_layout.xml" value="0.1015" />
         <entry key="app/src/main/res/drawable/bg_video_show_root_layout2.xml" value="0.1355" />
         <entry key="app/src/main/res/drawable/bg_video_source_register.xml" value="0.139" />
         <entry key="app/src/main/res/drawable/bg_video_source_spinner.xml" value="0.2215" />
+        <entry key="app/src/main/res/drawable/bg_video_source_tool_bar.xml" value="0.2855" />
         <entry key="app/src/main/res/drawable/bg_video_toolbar_view.xml" value="0.2215" />
         <entry key="app/src/main/res/drawable/bg_videoplayer_content.xml" value="0.246" />
         <entry key="app/src/main/res/drawable/ic__80_ring_with_bg.xml" value="0.233" />
@@ -29,17 +31,24 @@
         <entry key="app/src/main/res/layout-v26/activity_show_video.xml" value="0.12462006079027356" />
         <entry key="app/src/main/res/layout-v28/activity_show_video.xml" value="0.21458333333333332" />
         <entry key="app/src/main/res/layout/activity_dask_board.xml" value="0.1" />
-        <entry key="app/src/main/res/layout/activity_login.xml" value="0.67" />
+        <entry key="app/src/main/res/layout/activity_login.xml" value="0.33" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.33" />
         <entry key="app/src/main/res/layout/activity_register.xml" value="0.33" />
         <entry key="app/src/main/res/layout/activity_seek_acounts.xml" value="0.1899696048632219" />
-        <entry key="app/src/main/res/layout/activity_show_video.xml" value="0.67" />
+        <entry key="app/src/main/res/layout/activity_show_video.xml" value="0.42373962986598596" />
         <entry key="app/src/main/res/layout/item_dialogx_material_context_menu_normal_text.xml" value="0.20949123557075675" />
+        <entry key="app/src/main/res/layout/item_title_video_recycler_view_adapter.xml" value="0.3069687900812313" />
+        <entry key="app/src/main/res/layout/item_video_recycler_view_adapter.xml" value="0.2" />
+        <entry key="app/src/main/res/layout/toolbar.xml" value="0.27969174977334543" />
         <entry key="app/src/main/res/layout/video_show_draw_confirm_edit.xml" value="0.17870884993587002" />
         <entry key="app/src/main/res/layout/video_show_draw_find_spinner.xml" value="0.19324497648567765" />
+        <entry key="app/src/main/res/layout/video_show_nav_header.xml" value="0.5" />
+        <entry key="app/src/main/res/layout/video_show_nav_menu.xml" value="0.19084315503173163" />
+        <entry key="app/src/main/res/layout/video_show_toolbar.xml" value="0.48518518518518516" />
         <entry key="app/src/main/res/layout/video_source_delete_dialog.xml" value="0.33" />
         <entry key="app/src/main/res/layout/video_source_register_dialog.xml" value="0.33" />
         <entry key="app/src/main/res/layout/video_source_spinner.xml" value="0.1" />
+        <entry key="app/src/main/res/menu/video_show_nav_menu.xml" value="0.2344763670064875" />
       </map>
     </option>
   </component>

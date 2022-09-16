@@ -182,6 +182,7 @@ public class Login extends AppCompatActivity {
                                                 VideoModel.removeVideoModel(login_username, elem.getKey());
                                             }
                                         }
+//                                        ContourModel.clearContourModel(login_username);
                                         if (json.containsKey("contour_name") && json.containsKey("contour_path")
                                             && json.containsKey("contour_video_name")) {
                                             JSONArray contour_names = json.getJSONArray("contour_name");

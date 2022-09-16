@@ -6,16 +6,29 @@ import static com.tencent.live2.V2TXLiveCode.V2TXLIVE_ERROR_FAILED;
 import static com.tencent.live2.V2TXLiveCode.V2TXLIVE_OK;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Path;
-import android.graphics.drawable.AnimationDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.transition.Scene;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -24,6 +37,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
@@ -34,22 +48,25 @@ import android.widget.Toast;
 import com.blankj.utilcode.util.BarUtils;
 import com.blankj.utilcode.util.ClickUtils;
 import com.blankj.utilcode.util.ObjectUtils;
+import com.blankj.utilcode.util.PermissionUtils;
+import com.blankj.utilcode.util.SPUtils;
 import com.blankj.utilcode.util.ScreenUtils;
-import com.blankj.utilcode.util.SizeUtils;
 import com.glcc.client.manager.ContourModel;
 import com.glcc.client.manager.UserModel;
 import com.glcc.client.manager.VideoModel;
+import com.glcc.client.manager.VideoRecorderModel;
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.kongzue.dialogx.dialogs.BottomDialog;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.PopMenu;
+import com.kongzue.dialogx.dialogs.PopNotification;
 import com.kongzue.dialogx.dialogs.PopTip;
 import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.interfaces.OnBackPressedListener;
 import com.kongzue.dialogx.interfaces.OnBindView;
 import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 import com.kongzue.dialogx.interfaces.OnMenuItemClickListener;
-import com.kongzue.dialogx.util.TextInfo;
 import com.tencent.live2.V2TXLiveDef;
 import com.tencent.live2.V2TXLivePlayer;
 import com.tencent.live2.V2TXLivePlayerObserver;
@@ -61,10 +78,17 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -74,18 +98,33 @@ import java.util.concurrent.Future;
 import okhttp3.Response;
 
 public class ShowVideo extends AppCompatActivity {
+    private static int toolbarFadeTime = 500;
     private Handler handler;
     private MyLivePlayer mALivePlayer;
-    private Bundle login_bundle;
+    private MyFileLivePlayer mFileLivePlayer;
     private Spinner mSpinnerVideoSource;
     private TextView mTxtVideoSourceRegister;
     private TextView mTxtVideoSourceDelete;
     private TextView mTxtVideoSourceDraw;
     private Toolbar mVideoShowToolBar;
-    private RadioGroup mRadioGroupVideoSourceDelete;
+    private TextView mVideoShowInfoBar;
+    private DrawerLayout mVideoShowDrawerLayout;
+    private NavigationView mVideoShowNavigationView;
+    private VideoRecyclerViewAdapter mVideoRecyclerViewAdapter;
+    private RecyclerView mVideoRecyclerView;
+    private RecyclerView.LayoutManager mVideoRecyclerViewLayoutManger;
     private UserModel userModel;
     private ArrayAdapter<String> videoSourceSpinnerAdapter;
-
+    private ImageView videoRecyclerLoading;
+    private Animation videoRecyclerLoadingAnimation;
+    private Timer fetchVideoTimer;
+    private Timer infoPlayTimer;
+    private FetchVideoTimerTask fetchVideoTimerTask;
+    private boolean isNotifyInformation = false;
+    private final String turnOnNotifications = "Turn On Notifications";
+    private final String turnOffNotifications = "Turn Off Notifications";
+    private final String infoMsg1 = "Welcome to Cat Cat Application";
+    private final String infoMsg2 = "Take care of your cat";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,8 +132,6 @@ public class ShowVideo extends AppCompatActivity {
         MyUtils.setMyStatusBar(ShowVideo.this);
         setContentView(R.layout.activity_show_video);
         initialize();
-        mVideoShowToolBar = findViewById(R.id.video_show_toolbar);
-        BarUtils.addMarginTopEqualStatusBarHeight(mVideoShowToolBar);
     }
 
     private void initialize() {
@@ -106,16 +143,136 @@ public class ShowVideo extends AppCompatActivity {
         initVideoSourceRegister();
         initVideoSourceDelete();
         initVideoSourceDraw();
+        initToolBar();
+        initNavigation();
         setListener();
         mALivePlayer = new MyLivePlayer();
         mALivePlayer.initialize();
+        mFileLivePlayer = new MyFileLivePlayer();
+        mFileLivePlayer.initialize();
+        initVideoRecycleView();
+        initVideoShowInfoBar();
     }
 
+    private void initVideoShowInfoBar() {
+        mVideoShowInfoBar = findViewById(R.id.video_show_info_bar);
+        infoPlayTimer = new Timer();
+        infoPlayTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+            if (!ObjectUtils.isEmpty(mSpinnerVideoSource.getSelectedItem())) {
+                String videoSourceName = "VideoSource: " + mSpinnerVideoSource.getSelectedItem().toString();
+                if (mVideoShowInfoBar.getText().equals(videoSourceName)) {
+                    mVideoShowInfoBar.setText(infoMsg1);
+                } else if (mVideoShowInfoBar.getText().equals(infoMsg1)) {
+                    mVideoShowInfoBar.setText(infoMsg2);
+                } else {
+                    mVideoShowInfoBar.setText(videoSourceName);
+                }
+            } else {
+                if (mVideoShowInfoBar.getText().equals(infoMsg1)) {
+                    mVideoShowInfoBar.setText(infoMsg2);
+                } else {
+                    mVideoShowInfoBar.setText(infoMsg1);
+                }
+            }
+            }
+        }, 1000 * 60, 1000 * 60);
+    }
+
+    private void initVideoRecycleView() {
+        videoRecyclerLoading = findViewById(R.id.recycler_view_loading_image);
+        videoRecyclerLoadingAnimation = AnimationUtils.loadAnimation(ShowVideo.this, R.anim.animation_recycler_loading);
+        fetchVideoTimerTask = new FetchVideoTimerTask();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                fetchVideoTimerTask.init();
+            }
+        }).start();
+        fetchVideoTimer = new Timer();
+        fetchVideoTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                fetchVideoTimerTask.update();
+            }
+        }, 1000 * 60 * 2,60 * 1000 * 5);
+    }
+
+
+    private void initToolBar() {
+        mVideoShowToolBar = findViewById(R.id.video_show_toolbar);
+        setSupportActionBar(mVideoShowToolBar);
+//        MyUtils.setMyStatusBar(ShowVideo.this);
+        BarUtils.addMarginTopEqualStatusBarHeight(mVideoShowToolBar);
+    }
+
+    protected void initNavigation() {
+        mVideoShowNavigationView = findViewById(R.id.video_show_navigation_view);
+        if (!ObjectUtils.isEmpty(SPUtils.getInstance(Constants.GLCC_NOTIFICATION_TAG).getBoolean("isNotifyInformation"))) {
+            isNotifyInformation = SPUtils.getInstance(Constants.GLCC_NOTIFICATION_TAG).getBoolean("isNotifyInformation");
+        }
+        mVideoShowDrawerLayout = findViewById(R.id.video_show_drawerlayout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, mVideoShowDrawerLayout, mVideoShowToolBar,
+                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mVideoShowNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @RequiresApi(api = Build.VERSION_CODES.M)
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.video_show_open_draw_lays:
+                    {
+                        setNotifyInformation(item);
+                        break;
+                    }
+                }
+                return false;
+            }
+        });
+        mVideoShowDrawerLayout.addDrawerListener(toggle);
+        View headerView = mVideoShowNavigationView.getHeaderView(0);
+        TextView textView = headerView.findViewById(R.id.video_show_nav_user_nickname);
+        String helloMsg = textView.getText().toString() + " " + userModel.getNickName();
+        textView.setText(helloMsg);
+
+        toggle.syncState();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    protected void setNotifyInformation(MenuItem item) {
+        if (item.getTitle().equals(turnOnNotifications)) {
+            if (!PermissionUtils.isGrantedDrawOverlays()) {
+                PermissionUtils.requestDrawOverlays(new PermissionUtils.SimpleCallback() {
+                    @Override
+                    public void onGranted() {
+                        isNotifyInformation = true;
+                    }
+
+                    @Override
+                    public void onDenied() {
+                        isNotifyInformation = false;
+                    }
+                });
+            } else {
+                isNotifyInformation = true;
+            }
+        } else {
+            isNotifyInformation = false;
+        }
+
+        if (isNotifyInformation){
+            item.setTitle(turnOffNotifications);
+        } else {
+            item.setTitle(turnOnNotifications);
+        }
+
+        SPUtils.getInstance(Constants.GLCC_NOTIFICATION_TAG).put("isNotifyInformation", isNotifyInformation);
+    }
 
     private void initVideoSourceSpinner() {
         mSpinnerVideoSource = findViewById(R.id.video_source_spinner);
         mSpinnerVideoSource.setPrompt("Please Choose Video Source");
-
         videoSourceSpinnerAdapter = new ArrayAdapter<String>(this, R.layout.video_source_spinner, R.id.video_source_item);
         mSpinnerVideoSource.setAdapter(videoSourceSpinnerAdapter);
         mSpinnerVideoSource.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -135,7 +292,6 @@ public class ShowVideo extends AppCompatActivity {
         }
     }
 
-
     private void initVideoSourceRegister() {
         mTxtVideoSourceRegister = findViewById(R.id.view_video_source_register);
     }
@@ -152,6 +308,16 @@ public class ShowVideo extends AppCompatActivity {
         mTxtVideoSourceRegister.setOnClickListener(onClick);
         mTxtVideoSourceDelete.setOnClickListener(onClick);
         mTxtVideoSourceDraw.setOnClickListener(onClick);
+    }
+
+    protected class RecyclerViewOnClick implements VideoRecyclerViewAdapter.OnItemClickListener {
+        @Override
+        public void onItemClick(int position) {
+            VideoRecyclerViewAdapter.ViewItem item = mVideoRecyclerViewAdapter.getSingleItem(position);
+            if (item.getType() == VideoRecyclerViewAdapter.TYPE_CHILD) {
+                VideoRecyclerViewAdapter.ViewChild child = (VideoRecyclerViewAdapter.ViewChild) item;
+            }
+        }
     }
 
     protected class OnClick extends ClickUtils.OnDebouncingClickListener {
@@ -227,6 +393,7 @@ public class ShowVideo extends AppCompatActivity {
                                                     videoModel.setVideoName(video_name);
                                                     videoModel.setVideoUrl(video_url);
                                                     videoModel.saveVideoModel(userModel.getUserName());
+                                                    mALivePlayer.firstFetch.put(videoModel.getVideoName(), true);
                                                     Log.d("ShowVideoThread", userModel.getUserName() + ":" + video_name + ":" + video_url);
                                                     return false;
                                                 } else {
@@ -282,9 +449,7 @@ public class ShowVideo extends AppCompatActivity {
                             Callable<Boolean> task = new Callable<Boolean>() {
                                 @Override
                                 public Boolean call() throws Exception {
-                                    WaitDialog.show("Please wait...");
                                     Response response = GLCCClient.doCommonPost(Constants.GLCC_DELETE_VIDEO_URL, reqJson.toString());
-                                    WaitDialog.dismiss();
                                     if (ObjectUtils.isEmpty(response)) {
                                         handler.post(()->{
                                             Toast.makeText(ShowVideo.this, "Request Error!", Toast.LENGTH_SHORT).show();
@@ -336,16 +501,6 @@ public class ShowVideo extends AppCompatActivity {
                     } else{
                         Toast.makeText(ShowVideo.this, "Please use the function on playing", Toast.LENGTH_SHORT).show();
                     }
-//                    if (mALivePlayer.mIsDrawing) {
-//                        mALivePlayer.stopDraw();
-//                    } else {
-//                        if (mALivePlayer.mIsPlaying) {
-//                            mALivePlayer.startDraw();
-//                        } else {
-//                            mALivePlayer.stopDraw();
-//                            Toast.makeText(ShowVideo.this, "Please use the function on playing", Toast.LENGTH_SHORT).show();
-//                        }
-//                    }
                     break;
                 }
                 default:
@@ -364,17 +519,31 @@ public class ShowVideo extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         mALivePlayer.stopPlay();
+        if (!ObjectUtils.isEmpty(mFileLivePlayer.roomName)) {
+            mFileLivePlayer.toggleExit();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mALivePlayer.destroy();
+        if (!ObjectUtils.isEmpty(mFileLivePlayer.roomName)) {
+            mFileLivePlayer.toggleExit();
+        }
+        mFileLivePlayer.onDestroy();
     }
 
     @Override
     public void onBackPressed() {
-        mALivePlayer.stopPlay();
+        if (mVideoShowDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+            mVideoShowDrawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            mALivePlayer.stopPlay();
+        }
+        if (!ObjectUtils.isEmpty(mFileLivePlayer.roomName)) {
+            mFileLivePlayer.toggleExit();
+        }
     }
 
 
@@ -384,12 +553,18 @@ public class ShowVideo extends AppCompatActivity {
         private ImageView mImageLoading;
         private ImageButton mBtnVideoPlay;
         private ImageButton mBtnVideoWide;
+        private ImageButton mBtnVideoInfo;
+        private ImageButton mBtnVideoFetch;
         private ImageView mImageVideoLogo;
-        private RelativeLayout mVideoShowLayoutRoot;
-        private RelativeLayout mVideoShowPlayToolLayoutRoot;
-        private RelativeLayout mVideoSourceToolLayoutRoot;
-        private RelativeLayout mVideoShowLatticDrawLayoutRoot;
-        private TextView mVideoShowInfoLayoutRoot;
+//        private LogInfoWindow
+        //        private androidx.appcompat.widget.Toolbar mVideoShowToolbar;
+        private LinearLayout mVideoShowRoot;
+        private com.glcc.client.VideoShowRelativeLayout mVideoShowLayout;
+        private RelativeLayout mVideoShowPlayToolLayout;
+        private RelativeLayout mVideoSourceToolLayout;
+        private RelativeLayout mVideoShowLatticDrawLayout;
+        private RelativeLayout mVideoShowInfoToolLayout;
+        private TextView mVideoShowInfoLayout;
 //        private androidx.appcompat.widget.Toolbar mVideoShowToolbar;
         private com.glcc.client.DrawView mDrawViewDrawCanvas;
         private com.github.clans.fab.FloatingActionButton mDrawViewUndoBtn;
@@ -405,20 +580,26 @@ public class ShowVideo extends AppCompatActivity {
         private boolean mIsPlaying = false;
         private boolean mIsWiding = false;
         private boolean mIsDrawing = false;
+        private boolean mIsPlayToolAppearing = false;
+        private Map<String, Boolean> firstFetch = new HashMap<>();
 
         MyLivePlayer(){
             mVideoView = findViewById(R.id.video_view);
             mImageLoading = findViewById(R.id.video_loading);
             mBtnVideoPlay = findViewById(R.id.video_play_btn);
             mBtnVideoWide = findViewById(R.id.video_play_wide);
+            mBtnVideoFetch = findViewById(R.id.video_play_fetch);
+            mBtnVideoInfo = findViewById(R.id.video_info_btn);
             mImageVideoLogo = findViewById(R.id.video_play_logo);
-            mVideoShowLayoutRoot = findViewById(R.id.video_show_layout_root);
+            mVideoShowLayout = findViewById(R.id.video_show_layout_root);
 //            mVideoShowToolbar = findViewById(R.id.video_show_toolbar);
-            mVideoShowInfoLayoutRoot = findViewById(R.id.video_show_info_bar); // to recycle
-            mVideoShowPlayToolLayoutRoot = findViewById(R.id.video_show_play_tool_bar);
-            mVideoSourceToolLayoutRoot = findViewById(R.id.video_source_toolbar);
+            mVideoShowInfoLayout = findViewById(R.id.video_show_info_bar); // to recycle
+            mVideoShowPlayToolLayout = findViewById(R.id.video_show_play_tool_bar);
+            mVideoShowInfoToolLayout = findViewById(R.id.video_info_layout);
+            mVideoSourceToolLayout = findViewById(R.id.video_source_toolbar);
 
-            mVideoShowLatticDrawLayoutRoot = findViewById(R.id.video_show_draw_layout_root);
+            mVideoShowRoot = findViewById(R.id.video_show_root);
+            mVideoShowLatticDrawLayout = findViewById(R.id.video_show_draw_layout_root);
             mDrawViewDrawCanvas = findViewById(R.id.video_show_draw_canvas);
             mDrawViewRedoBtn = findViewById(R.id.video_show_lattice_draw_redo);
             mDrawViewUndoBtn = findViewById(R.id.video_show_lattice_draw_undo);
@@ -427,29 +608,43 @@ public class ShowVideo extends AppCompatActivity {
             mDrawViewConfirmBtn = findViewById(R.id.video_show_lattice_draw_confirm);
             mDrawViewMenuBtn = findViewById(R.id.video_show_lattice_draw_menu);
 
-            mVideoShowLayoutRootParam = mVideoShowLayoutRoot.getLayoutParams();
+            mVideoShowLayoutRootParam = mVideoShowLayout.getLayoutParams();
             VideoLoadingAnimation = AnimationUtils.loadAnimation(ShowVideo.this, R.anim.animation_loading);
         }
-
 
         private void initialize() {
             initPlayView();
             initPlayButton();
             initDrawButton();
+            initLogInfo();
+            initFirstFetch();
+            initVideoPlayLayout();
             startPlay();
+        }
+
+        private void initFirstFetch() {
+            for (Map.Entry<String, VideoModel> elem : VideoModel.loadAllVideoModel(userModel.getUserName()).entrySet()) {
+                firstFetch.put(elem.getValue().getVideoName(), true);
+            }
         }
 
         protected void initPlayView() {
             mVideoView.setLogMargin(12, 12, 110, 60);
-            mVideoView.showLog(false);
+            mVideoView.showLog(true);
 //            mLivePlayer.setRenderView(mVideoView);
             mLivePlayer = new V2TXLivePlayerImpl(ShowVideo.this);
+        }
+
+        protected void initVideoPlayLayout() {
+            VideoOnclick onclick = new VideoOnclick(500);
+            mVideoShowLayout.setOnClickListener(onclick);
         }
 
         protected void initPlayButton() {
             VideoOnclick onClick = new VideoOnclick();
             mBtnVideoPlay.setOnClickListener(onClick);
             mBtnVideoWide.setOnClickListener(onClick);
+            mBtnVideoFetch.setOnClickListener(onClick);
         }
 
         protected void initDrawButton() {
@@ -467,14 +662,42 @@ public class ShowVideo extends AppCompatActivity {
             mDrawViewConfirmBtn.setOnClickListener(onclick);
         }
 
+        protected void initLogInfo() {
+            VideoOnclick videoOnclick = new VideoOnclick(500);
+            mBtnVideoInfo.setOnClickListener(videoOnclick);
+        }
+
 
         protected void startPlay() {
             int code;
-            startLoadingAnimation();
+            mBtnVideoPlay.setBackgroundResource(R.drawable.stop_button);
+            mVideoShowLayout.setBackgroundResource(R.drawable.bg_video_show_root_layout2);
+            mImageVideoLogo.setVisibility(View.GONE);
+            mVideoShowPlayToolLayout
+                    .animate()
+                    .alpha(0f)
+                    .setDuration(toolbarFadeTime)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            mVideoShowPlayToolLayout.setVisibility(View.GONE);
+                        }
+                    });
+            mVideoShowInfoToolLayout
+                    .animate()
+                    .alpha(0f)
+                    .setDuration(toolbarFadeTime)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            mVideoShowInfoToolLayout.setVisibility(View.GONE);
+                        }
+                    });
+            mVideoShowLayout.setClickable(true);
             mBtnVideoPlay.setClickable(false);
-            if (!ObjectUtils.isEmpty(mSpinnerVideoSource.getSelectedItem())) {
+            startLoadingAnimation();
+            if (!ObjectUtils.isEmpty(mSpinnerVideoSource.getSelectedItem()) && !mIsPlaying) {
                 String video_name = mSpinnerVideoSource.getSelectedItem().toString();
-                Log.d("ShowVideo", video_name);
                 VideoModel videoModel = VideoModel.loadVideoModel(userModel.getUserName(), video_name);
                 if (!ObjectUtils.isEmpty(videoModel) && fetchDetectVideo(videoModel)) {
                     videoModel = VideoModel.loadVideoModel(userModel.getUserName(), video_name);
@@ -509,33 +732,147 @@ public class ShowVideo extends AppCompatActivity {
             }
             if (mLivePlayer != null) {
                 mLivePlayer.stopPlay();
+//                mLivePlayer.pauseVideo();
                 mLivePlayer.setObserver(null);
             }
             mIsPlaying = false;
             onPlayStop();
         }
 
+        protected void pausePlay() {
+            if (!mIsPlaying) {
+                return;
+            }
+            if (mLivePlayer != null) {
+                mLivePlayer.pauseVideo();
+            }
+            mIsPlaying = false;
+            onPlayPause();
+        }
+
+        protected void resumePlay() {
+            if (mIsPlaying) {
+                return;
+            }
+            int code;
+            if (mLivePlayer != null) {
+                code = mLivePlayer.resumeVideo();
+            } else {
+                code = V2TXLIVE_ERROR_FAILED;
+            }
+            if (code == V2TXLIVE_OK) {
+                mIsPlaying = true;
+                onPlayResume();
+            }
+        }
+
+        protected void onPlayResume() {
+            mBtnVideoPlay.setBackgroundResource(R.drawable.stop_button);
+            mImageVideoLogo.setVisibility(View.GONE);
+            mVideoShowPlayToolLayout
+                    .animate()
+                    .alpha(0f)
+                    .setDuration(toolbarFadeTime)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            mVideoShowPlayToolLayout.setVisibility(View.GONE);
+                        }
+                    });
+            mVideoShowInfoToolLayout
+                    .animate()
+                    .alpha(0f)
+                    .setDuration(toolbarFadeTime)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            mVideoShowInfoToolLayout.setVisibility(View.GONE);
+                        }
+                    });
+            mVideoShowLayout.setClickable(true);
+        }
+
+        protected void onPlayPause() {
+            mBtnVideoPlay.setBackgroundResource(R.drawable.play_button);
+            mVideoShowPlayToolLayout.setVisibility(View.VISIBLE);
+            mVideoShowPlayToolLayout
+                    .animate()
+                    .alpha(1f)
+                    .setDuration(toolbarFadeTime).setListener(null);
+            mVideoShowInfoToolLayout.setVisibility(View.VISIBLE);
+            mVideoShowInfoToolLayout
+                    .animate()
+                    .alpha(1f)
+                    .setDuration(toolbarFadeTime).setListener(null);
+            mVideoShowLayout.setClickable(false);
+            stopLoadingAnimation();
+        }
+
+
         protected void onPlayStart(int code) {
             if (code != V2TXLIVE_OK) {
                 mBtnVideoPlay.setBackgroundResource(R.drawable.play_button);
-                mVideoShowLayoutRoot.setBackgroundResource(R.drawable.bg_video_show_root_layout);
+                mVideoShowLayout.setBackgroundResource(R.drawable.bg_video_show_root_layout);
                 mImageVideoLogo.setVisibility(View.VISIBLE);
                 stopLoadingAnimation();
+                mVideoShowPlayToolLayout.setVisibility(View.VISIBLE);
+                mVideoShowPlayToolLayout
+                        .animate()
+                        .alpha(1f)
+                        .setDuration(toolbarFadeTime).setListener(null);
+                mVideoShowInfoToolLayout.setVisibility(View.VISIBLE);
+                mVideoShowInfoToolLayout
+                        .animate()
+                        .alpha(1f)
+                        .setDuration(toolbarFadeTime).setListener(null);
+                mVideoShowLayout.setClickable(false);
                 if (mIsDrawing) {
                     stopDraw();
                 }
                 // TODO: Add Logo Info
             } else {
                 mBtnVideoPlay.setBackgroundResource(R.drawable.stop_button);
-                mVideoShowLayoutRoot.setBackgroundResource(R.drawable.bg_video_show_root_layout2);
+                mVideoShowLayout.setBackgroundResource(R.drawable.bg_video_show_root_layout2);
                 mImageVideoLogo.setVisibility(View.GONE);
+                mVideoShowPlayToolLayout
+                        .animate()
+                        .alpha(0f)
+                        .setDuration(toolbarFadeTime)
+                        .setListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                mVideoShowPlayToolLayout.setVisibility(View.GONE);
+                            }
+                        });
+                mVideoShowInfoToolLayout
+                        .animate()
+                        .alpha(0f)
+                        .setDuration(toolbarFadeTime)
+                        .setListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                mVideoShowInfoToolLayout.setVisibility(View.GONE);
+                            }
+                        });
+                mVideoShowLayout.setClickable(true);
             }
         }
 
         protected void onPlayStop() {
             mBtnVideoPlay.setBackgroundResource(R.drawable.play_button);
-            mVideoShowLayoutRoot.setBackgroundResource(R.drawable.bg_video_show_root_layout);
+            mVideoShowLayout.setBackgroundResource(R.drawable.bg_video_show_root_layout);
             mImageVideoLogo.setVisibility(View.VISIBLE);
+            mVideoShowPlayToolLayout.setVisibility(View.VISIBLE);
+            mVideoShowPlayToolLayout
+                    .animate()
+                    .alpha(1f)
+                    .setDuration(toolbarFadeTime).setListener(null);
+            mVideoShowInfoToolLayout.setVisibility(View.VISIBLE);
+            mVideoShowInfoToolLayout
+                    .animate()
+                    .alpha(1f)
+                    .setDuration(toolbarFadeTime).setListener(null);
+            mVideoShowLayout.setClickable(false);
             stopLoadingAnimation();
             if (mIsDrawing) {
                 stopDraw();
@@ -554,8 +891,47 @@ public class ShowVideo extends AppCompatActivity {
                         Toast.makeText(ShowVideo.this, "No video is selected", Toast.LENGTH_SHORT).show();
                     });
                 }
-
             }
+        }
+
+        protected void playToolAppearing() {
+            mIsPlayToolAppearing = true;
+            mVideoShowPlayToolLayout.setVisibility(View.VISIBLE);
+            mVideoShowPlayToolLayout
+                    .animate()
+                    .alpha(1f)
+                    .setDuration(toolbarFadeTime).setListener(null);
+            mVideoShowInfoToolLayout.setVisibility(View.VISIBLE);
+            mVideoShowInfoToolLayout
+                    .animate()
+                    .alpha(1f)
+                    .setDuration(toolbarFadeTime).setListener(null);
+            mVideoShowLayout.setClickable(true);
+        }
+
+        protected void playToolDisappearing() {
+            mIsPlayToolAppearing = false;
+            mVideoShowPlayToolLayout
+                    .animate()
+                    .alpha(0f)
+                    .setDuration(toolbarFadeTime)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            mVideoShowPlayToolLayout.setVisibility(View.GONE);
+                        }
+                    });
+            mVideoShowInfoToolLayout
+                    .animate()
+                    .alpha(0f)
+                    .setDuration(toolbarFadeTime)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            mVideoShowInfoToolLayout.setVisibility(View.GONE);
+                        }
+                    });
+            mVideoShowLayout.setClickable(true);
         }
 
         protected void togglePlay() {
@@ -563,6 +939,14 @@ public class ShowVideo extends AppCompatActivity {
                 stopPlay();
             } else {
                 startPlay();
+            }
+        }
+
+        protected void toggleResume() {
+            if (mIsPlaying) {
+                pausePlay();
+            } else {
+                resumePlay();
             }
         }
 
@@ -578,19 +962,29 @@ public class ShowVideo extends AppCompatActivity {
             }
         }
 
+        protected void togglePlayToolAppear() {
+            if (mIsPlayToolAppearing) {
+                playToolDisappearing();
+            } else {
+                playToolAppearing();
+            }
+        }
+
         protected void startDraw() {
             mIsDrawing = true;
             mDrawViewDrawCanvas.loadAllContourModel(userModel.getUserName(),
                     mSpinnerVideoSource.getSelectedItem().toString());
-            mVideoShowPlayToolLayoutRoot.setVisibility(View.GONE);
-            mVideoShowLatticDrawLayoutRoot.setVisibility(View.VISIBLE);
+            mVideoShowPlayToolLayout.setVisibility(View.GONE);
+            mVideoShowInfoToolLayout.setVisibility(View.GONE);
+            mVideoShowLatticDrawLayout.setVisibility(View.VISIBLE);
             mDrawViewDrawCanvas.updateCanvas();
         }
 
         protected void stopDraw() {
             mIsDrawing = false;
-            mVideoShowPlayToolLayoutRoot.setVisibility(View.VISIBLE);
-            mVideoShowLatticDrawLayoutRoot.setVisibility(View.GONE);
+            mVideoShowPlayToolLayout.setVisibility(View.VISIBLE);
+            mVideoShowInfoToolLayout.setVisibility(View.VISIBLE);
+            mVideoShowLatticDrawLayout.setVisibility(View.GONE);
             mDrawViewDrawCanvas.clear();
         }
 
@@ -605,19 +999,29 @@ public class ShowVideo extends AppCompatActivity {
         protected void toShrinkState() {
             mBtnVideoWide.setBackgroundResource(R.drawable.wide);
             mVideoShowToolBar.setVisibility(View.VISIBLE);
-            mVideoShowInfoLayoutRoot.setVisibility(View.VISIBLE);
-            mVideoSourceToolLayoutRoot.setVisibility(View.VISIBLE);
+            mVideoShowInfoLayout.setVisibility(View.VISIBLE);
+            mVideoSourceToolLayout.setVisibility(View.VISIBLE);
+            mVideoShowLayout.setRotateMode(VideoShowRelativeLayout.PORTRAIT);
             mVideoShowLayoutRootParam.width = RelativeLayout.LayoutParams.MATCH_PARENT;
-            mVideoShowLayoutRootParam.height = SizeUtils.dp2px(280);
+            mVideoShowRoot.setGravity(Gravity.CENTER_HORIZONTAL);
+            BarUtils.setStatusBarVisibility(ShowVideo.this, true);
+            mVideoShowRoot.setBackgroundColor(getResources().getColor(R.color.main_theme));
+//            mVideoShowLayoutRootParam.height = SizeUtils.dp2px(280);
         }
 
         protected void toWideState() {
             mBtnVideoWide.setBackgroundResource(R.drawable.reduce);
             mVideoShowToolBar.setVisibility(View.GONE);
-            mVideoShowInfoLayoutRoot.setVisibility(View.GONE);
-            mVideoSourceToolLayoutRoot.setVisibility(View.GONE);
-            mVideoShowLayoutRootParam.width = RelativeLayout.LayoutParams.MATCH_PARENT;
+            mVideoShowInfoLayout.setVisibility(View.GONE);
+            mVideoSourceToolLayout.setVisibility(View.GONE);
+            mVideoShowLayout.setRotateMode(VideoShowRelativeLayout.LANDSCAPE);
+//            mVideoShowLayoutRootParam.width = RelativeLayout.LayoutParams.MATCH_PARENT;
             mVideoShowLayoutRootParam.height = RelativeLayout.LayoutParams.MATCH_PARENT;
+            mVideoShowRoot.setGravity(Gravity.CENTER);
+            BarUtils.setStatusBarVisibility(ShowVideo.this, false);
+            mVideoShowRoot.setBackgroundColor(getResources().getColor(R.color.black));
+            BarUtils.addMarginTopEqualStatusBarHeight(mVideoShowToolBar);
+//            mVideoShowLayout.setGravity(Gravity.CENTER_HORIZONTAL);
         }
 
         protected void startLoadingAnimation() {
@@ -636,59 +1040,61 @@ public class ShowVideo extends AppCompatActivity {
 
         public boolean fetchDetectVideo(VideoModel videoModel) {
             if (!ObjectUtils.isEmpty(videoModel)) {
-                WaitDialog.show("Connect to server, wait...");
-                JSONObject json = new JSONObject();
-                json.put("video_url", videoModel.getVideoUrl());
-                json.put("video_name", videoModel.getVideoName());
-                json.put("user_name", userModel.getUserName());
-                json.put("user_password", userModel.getPassword());
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                Callable<Boolean> task = new Callable<Boolean>() {
-                    @Override
-                    public Boolean call() throws Exception {
-                        Response response = GLCCClient.doCommonPost(Constants.GLCC_DECT_VIDEO_URL, json.toString());
-                        if (ObjectUtils.isEmpty(response)) {
-                            handler.post(() -> {
-                                Toast.makeText(ShowVideo.this, "Video Request Error!", Toast.LENGTH_SHORT).show();
-                                stopPlay();
-                            });
-                            return false;
-                        } else {
-                            if (response.code() == 200) {
-                                String body = null;
-                                try {
-                                    body = response.body().string();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                                JSONObject response_map = JSONObject.fromObject(body);
-                                String room_name = response_map.getString("room_name");
-                                // TODO: More General (flv to any type)
-                                String room_url = String.format("%s/%s.flv", Constants.GLCC_VIDEO_PLAYER_BASE_URL, room_name);
-                                Log.d("ShowVideo", room_url);
-                                videoModel.setRoomUrl(room_url);
-                                videoModel.saveVideoModel(userModel.getUserName());
-                                return true;
-                            } else {
+                if (Boolean.TRUE.equals(firstFetch.get(videoModel.getVideoName()))) {
+                    JSONObject json = new JSONObject();
+                    json.put("video_url", videoModel.getVideoUrl());
+                    json.put("video_name", videoModel.getVideoName());
+                    json.put("user_name", userModel.getUserName());
+                    json.put("user_password", userModel.getPassword());
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    Callable<Boolean> task = new Callable<Boolean>() {
+                        @Override
+                        public Boolean call() throws Exception {
+                            Response response = GLCCClient.doCommonPost(Constants.GLCC_DECT_VIDEO_URL, json.toString());
+                            if (ObjectUtils.isEmpty(response)) {
                                 handler.post(() -> {
-                                    Toast.makeText(ShowVideo.this, "Video Show Error", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(ShowVideo.this, "Video Request Error!", Toast.LENGTH_SHORT).show();
                                     stopPlay();
                                 });
                                 return false;
+                            } else {
+                                if (response.code() == 200) {
+                                    String body = null;
+                                    try {
+                                        body = response.body().string();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                    JSONObject response_map = JSONObject.fromObject(body);
+                                    String room_name = response_map.getString("room_name");
+                                    // TODO: More General (flv to any type)
+                                    String room_url = String.format("%s/%s.flv", Constants.GLCC_VIDEO_PLAYER_BASE_URL, room_name);
+                                    videoModel.setRoomUrl(room_url);
+                                    videoModel.saveVideoModel(userModel.getUserName());
+                                    firstFetch.put(videoModel.getVideoName(), false);
+                                    return true;
+                                } else {
+                                    handler.post(() -> {
+                                        Toast.makeText(ShowVideo.this, "Video Show Error", Toast.LENGTH_SHORT).show();
+                                        stopPlay();
+                                    });
+                                    return false;
+                                }
                             }
                         }
-                    }
-                };
+                    };
 
-                Future<Boolean> future = executor.submit(task);
-                boolean state = false;
-                try {
-                    state = future.get();
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                    Future<Boolean> future = executor.submit(task);
+                    boolean state = false;
+                    try {
+                        state = future.get();
+                    } catch (ExecutionException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    return state;
+                } else {
+                    return true;
                 }
-                WaitDialog.dismiss();
-                return state;
             } else {
                 return false;
             }
@@ -786,16 +1192,43 @@ public class ShowVideo extends AppCompatActivity {
         }
 
         protected class VideoOnclick extends ClickUtils.OnDebouncingClickListener {
+            public VideoOnclick() {
+                super();
+            }
+            public VideoOnclick(final long duration) {
+                super(true, duration);
+            }
+
             @SuppressLint("NonConstantResourceId")
             @Override
             public void onDebouncingClick(@NonNull View view) {
                 switch (view.getId()) {
                     case R.id.video_play_btn: {
-                        togglePlay();
+                        toggleResume();
+//                        togglePlay();
                         break;
                     }
                     case R.id.video_play_wide: {
                         toggleWide();
+                        break;
+                    }
+                    case R.id.video_show_layout_root: {
+                        togglePlayToolAppear();
+                        break;
+                    }
+                    case R.id.video_info_btn: {
+                        // TODO:
+                        break;
+                    }
+                    case R.id.video_play_fetch: {
+                        if (!ObjectUtils.isEmpty(mSpinnerVideoSource.getSelectedItem())) {
+                            String video_name = mSpinnerVideoSource.getSelectedItem().toString();
+                            if (!ObjectUtils.isEmpty(video_name)) {
+                                firstFetch.put(video_name, true);
+                            }
+                            stopPlay();
+                            startPlay();
+                        }
                         break;
                     }
                     default:
@@ -843,9 +1276,7 @@ public class ShowVideo extends AppCompatActivity {
                                                 reqJson.put("user_name", userModel.getUserName());
                                                 reqJson.put("user_password", userModel.getPassword());
                                                 new Thread(()->{
-                                                    WaitDialog.show("Please Wait...");
                                                     Response response = GLCCClient.doCommonPost(Constants.GLCC_DISPUT_LATTICE_URL, reqJson.toString());
-                                                    WaitDialog.dismiss();
                                                     if (ObjectUtils.isEmpty(response)) {
                                                         handler.post(()->{
                                                             Toast.makeText(ShowVideo.this, "Request error", Toast.LENGTH_SHORT).show();
@@ -969,21 +1400,69 @@ public class ShowVideo extends AppCompatActivity {
         }
 
         // play/stop butto
-
         protected class MyPlayerObserver extends V2TXLivePlayerObserver {
             @Override
             public void onWarning(V2TXLivePlayer player, int code, String msg, Bundle extrainfo) {
                 Log.w(TAG, "[Player] onWarning: player-" + player + " code-" + code + " msg-" + msg + " info-" + extrainfo);
+                Log.d(TAG, "My: Code: " + code);
+                String videoName = mSpinnerVideoSource.getSelectedItem().toString();
+                if (!ObjectUtils.isEmpty(videoName)) {
+                    firstFetch.put(videoName, true);
+                }
+//                stopPlay();
             }
 
             @Override
             public void onError(V2TXLivePlayer player, int code, String msg, Bundle extrainfo) {
                 Log.e(TAG, "[Player] onError: player-" + player + " code-" + code + " msg-" + msg + " info-" + extrainfo);
+                String videoName = mSpinnerVideoSource.getSelectedItem().toString();
+                if (!ObjectUtils.isEmpty(videoName)) {
+                    firstFetch.put(videoName, true);
+                }
                 stopPlay();
             }
 
             @Override
             public void onSnapshotComplete(V2TXLivePlayer v2TXLivePlayer, Bitmap bitmap) {
+            }
+
+            @Override
+            public void onVideoResolutionChanged(V2TXLivePlayer player, int width, int height) {
+                if (!ObjectUtils.isEmpty(mDrawViewDrawCanvas)) {
+                    double ratioOrigin = height / (width * 1.);
+                    double ratioView = mVideoView.getHeight() / (mVideoView.getWidth() * 1.);
+                    double ratioCanvas = mDrawViewDrawCanvas.getHeight() / (mDrawViewDrawCanvas.getWidth() * 1.);
+                    if (mDrawViewDrawCanvas.getmCanvasRealSize()[0] != height
+                            || mDrawViewDrawCanvas.getmCanvasRealSize()[1] != width) {
+                        mDrawViewDrawCanvas.setmCanvasRealSize(height, width);
+                    }
+                    if (mDrawViewDrawCanvas.getWidth() != mVideoView.getWidth()
+                            || mDrawViewDrawCanvas.getHeight() != mVideoView.getWidth()
+                            || ratioCanvas != ratioOrigin) {
+                        if (ratioOrigin < ratioView) {
+                            ViewGroup.LayoutParams params = mDrawViewDrawCanvas.getLayoutParams();
+                            params.width = mVideoView.getWidth();
+                            params.height = (int)(mVideoView.getHeight() * ratioOrigin / ratioView);
+                            mDrawViewDrawCanvas.setLayoutParams(params);
+                        } else if (ratioOrigin > ratioView) {
+                            ViewGroup.LayoutParams params = mDrawViewDrawCanvas.getLayoutParams();
+                            params.height = mVideoView.getHeight();
+                            params.width = (int)(mVideoView.getWidth() * ratioView / ratioOrigin);
+                            mDrawViewDrawCanvas.setLayoutParams(params);
+//                            mDrawViewDrawCanvas.getmConfirmPathMap().clear();
+                        } else {
+                            ViewGroup.LayoutParams params = mDrawViewDrawCanvas.getLayoutParams();
+                            params.height = mVideoView.getHeight();
+                            params.width = mVideoView.getWidth();
+                            mDrawViewDrawCanvas.setLayoutParams(params);
+                        }
+                        if (!ObjectUtils.isEmpty(mSpinnerVideoSource.getSelectedItem())) {
+                            String videoName = mSpinnerVideoSource.getSelectedItem().toString();
+                            mDrawViewDrawCanvas.loadAllContourModel(userModel.getUserName(), videoName);
+                        }
+                    }
+                }
+
             }
 
             @Override
@@ -1010,23 +1489,16 @@ public class ShowVideo extends AppCompatActivity {
                         ", FPS:" + netStatus.getInt(TXLiveConstants.NET_STATUS_VIDEO_FPS) +
                         ", ARA:" + netStatus.getInt(TXLiveConstants.NET_STATUS_AUDIO_BITRATE) + "Kbps" +
                         ", VRA:" + netStatus.getInt(TXLiveConstants.NET_STATUS_VIDEO_BITRATE) + "Kbps");
-                Log.d(TAG, "My: " + mVideoView.getHeight() + "*" + mVideoView.getWidth());
-                Log.d(TAG, "My: " + mDrawViewDrawCanvas.getmCanvasRatio()[0] + "*" + mDrawViewDrawCanvas.getmCanvasRatio()[1]);
-                if (mDrawViewDrawCanvas.getmCanvasRealSize()[0] != statistics.height || mDrawViewDrawCanvas.getmCanvasRealSize()[1] != statistics.width) {
-                    mDrawViewDrawCanvas.setmCanvasRealSize(statistics.height, statistics.width);
-                }
-                if (mDrawViewDrawCanvas.getHeight() != mVideoView.getHeight() || mDrawViewDrawCanvas.getHeight() != mDrawViewDrawCanvas.getHeight()) {
-                    ViewGroup.LayoutParams params = mDrawViewDrawCanvas.getLayoutParams();
-                    params.height = mVideoView.getHeight();
-                    params.width = mVideoView.getWidth();
-                    mDrawViewDrawCanvas.setLayoutParams(params);
-                }
-//                mLogInfoWindow.setLogText(netStatus, null, 0);
             }
 
             @Override
             public void onVideoPlaying(V2TXLivePlayer v2TXLivePlayer, boolean firstPlay, Bundle extraInfo) {
-                stopLoadingAnimation();
+                if (firstPlay) {
+                    stopLoadingAnimation();
+                    Log.d(TAG, "My: firstPlay");
+                } else {
+                    Log.d(TAG, "My: SecondPlay");
+                }
             }
 
             @Override
@@ -1035,8 +1507,679 @@ public class ShowVideo extends AppCompatActivity {
             }
 
         }
-
     }
 
+    class FetchVideoTimerTask {
+
+        public List<VideoRecyclerViewAdapter.ViewItem> fetchVideo(JSONArray videoNameList) {
+            List<VideoRecyclerViewAdapter.ViewItem> videoRecyclerViewItemList = new ArrayList<>();
+            if (videoNameList.size() > 0) {
+                JSONObject videoFileFetchBody = new JSONObject();
+                videoFileFetchBody.element("user_name", userModel.getUserName());
+                videoFileFetchBody.element("user_password", userModel.getPassword());
+                videoFileFetchBody.element("video_name", videoNameList);
+                Response response = GLCCClient.doCommonPost(
+                        Constants.GLCC_FETCH_VIDEO_FILE_URL, videoFileFetchBody.toString());
+                if (ObjectUtils.isEmpty(response)) {
+                    handler.post(()->{
+                        Toast.makeText(ShowVideo.this, "Request Error!", Toast.LENGTH_SHORT).show();
+                    });
+                } else {
+                    if (response.code() == 200) {
+                        String body = null;
+                        try {
+                            body = response.body().string();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        if (!ObjectUtils.isEmpty(body)) {
+                            JSONObject respBody = JSONObject.fromObject(body);
+                            Iterator<String> keys = respBody.keys();
+                            String videoName;
+                            int groupPos = 0;
+                            while (keys.hasNext()) {
+                                videoName = keys.next();
+                                JSONArray videoPathList = respBody.getJSONArray(videoName);
+                                VideoRecyclerViewAdapter.ViewGroup group = new VideoRecyclerViewAdapter.ViewGroup();
+                                group.setPosition(groupPos);
+                                group.setTitle(videoName);
+                                videoRecyclerViewItemList.add(group);
+                                Map<String, VideoRecorderModel> videoRecorderModelMap = VideoRecorderModel
+                                        .loadAllVideoRecorderModel(userModel.getUserName(), videoName);
+
+                                for (int childPos = 0; childPos < videoPathList.size(); childPos++) {
+                                    JSONObject perVideoInfo = videoPathList.getJSONObject(childPos);
+                                    String videoUrl = perVideoInfo.getString("video_url");
+                                    String imageUrl = videoUrl.split("\\.")[0] + ".jpg";
+                                    String startTime = perVideoInfo.getString("start_time");
+                                    String endTime = perVideoInfo.getString("end_time");
+
+                                    VideoRecorderModel videoRecorderModel;
+                                    if (videoRecorderModelMap.containsKey(videoUrl)) {
+                                        videoRecorderModel = videoRecorderModelMap.get(videoUrl);
+                                    } else {
+                                        videoRecorderModel = new VideoRecorderModel();
+                                    }
+                                    if (!ObjectUtils.isEmpty(videoUrl)) {
+                                        videoRecorderModel.setVideoUrl(videoUrl);
+                                    }
+
+                                    if (!ObjectUtils.isEmpty(imageUrl)) {
+                                        videoRecorderModel.setImageUrl(imageUrl);
+                                    }
+                                    if (!ObjectUtils.isEmpty(startTime)) {
+                                        videoRecorderModel.setStartTime(startTime);
+                                    }
+                                    if (!ObjectUtils.isEmpty(endTime)) {
+                                        videoRecorderModel.setEndTime(endTime);
+                                    }
+
+                                    if (!ObjectUtils.isEmpty(startTime) && !ObjectUtils.isEmpty(endTime)) {
+                                        String message = "Cat has gone into the dangerous zone at " +
+                                                startTime + " .And quit the dangerous zone at " + endTime + ".";
+                                        videoRecorderModel.setMessage(message);
+                                    }
+                                    videoRecorderModel.saveVideoRecorderModel(userModel.getUserName(), videoName);
+                                    if (ObjectUtils.isEmpty(videoRecorderModel.getBitMap())) {
+                                        JSONObject imageMapFetchBody = new JSONObject();
+                                        imageMapFetchBody.element("user_name", userModel.getUserName());
+                                        imageMapFetchBody.element("user_password", userModel.getPassword());
+                                        imageMapFetchBody.element("video_name", videoName);
+                                        imageMapFetchBody.element("video_url", imageUrl);
+                                        Response imageMapResponse = GLCCClient.doCommonPost(
+                                                Constants.GLCC_TRANSMISS_VIDEO_FILE_URL,
+                                                imageMapFetchBody.toString()
+
+                                        );
+                                        if (!ObjectUtils.isEmpty(imageMapResponse)) {
+                                            if (imageMapResponse.code() != 200) {
+                                                Log.d(TAG, "Fetch image: " + imageUrl + " Error");
+                                            } else {
+                                                byte[] imageBuf = new byte[0];
+                                                try {
+                                                    imageBuf = imageMapResponse.body().bytes();
+                                                } catch (IOException e) {
+                                                    e.printStackTrace();
+                                                }
+                                                Log.d(TAG, "Fetch Image Size: " + imageBuf.length);
+
+                                                Bitmap bitmap;
+                                                if (imageBuf.length > 0) {
+                                                    bitmap = BitmapFactory.decodeByteArray(imageBuf, 0, imageBuf.length);
+                                                } else {
+                                                    bitmap = null;
+                                                    Log.d(TAG, "Fetch image: " + videoUrl + " Error");
+                                                }
+                                                if (!ObjectUtils.isEmpty(bitmap)) {
+                                                    videoRecorderModel.setBitMap(bitmap);
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    VideoRecyclerViewAdapter.ViewChild child = new VideoRecyclerViewAdapter.ViewChild();
+                                    child.setPosition(childPos);
+                                    child.setGroupName(group.getTitle());
+                                    child.setVideoRecorderModel(videoRecorderModel);
+                                    videoRecyclerViewItemList.add(child);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return videoRecyclerViewItemList;
+        }
+
+        public void init() {
+//            VideoRecorderModel.clearRecorderModel(userModel.getUserName());
+            handler.post(()->{
+                videoRecyclerLoading.startAnimation(videoRecyclerLoadingAnimation);
+                videoRecyclerLoading.setVisibility(View.VISIBLE);
+            });
+            Map<String, VideoModel> videoModelMap = VideoModel.loadAllVideoModel(userModel.getUserName());
+            JSONArray videoNameList = new JSONArray();
+            for (Map.Entry<String, VideoModel> item : videoModelMap.entrySet()) {
+                videoNameList.add(item.getValue().getVideoName());
+            }
+            List<VideoRecyclerViewAdapter.ViewItem> videoRecyclerViewItemList = fetchVideo(videoNameList);
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mVideoRecyclerViewAdapter = new VideoRecyclerViewAdapter(videoRecyclerViewItemList);
+                    mVideoRecyclerViewLayoutManger = new LinearLayoutManager(
+                            ShowVideo.this, LinearLayoutManager.VERTICAL, false);
+                    mVideoRecyclerView = findViewById(R.id.recorder_video_recycler_view);
+                    mVideoRecyclerView.setLayoutManager(mVideoRecyclerViewLayoutManger);
+                    mVideoRecyclerView.setAdapter(mVideoRecyclerViewAdapter);
+                    mVideoRecyclerView.addItemDecoration(new DividerItemDecoration(
+                            ShowVideo.this, DividerItemDecoration.VERTICAL));
+                    mVideoRecyclerViewAdapter.setOnItemClickListener(new RecyclerViewOnClick());
+//                mVideoRecyclerView.requestFocus();
+                    mVideoRecyclerViewAdapter.setOnImageViewClickListener(new ClickUtils.OnDebouncingClickListener() {
+                        @Override
+                        public void onDebouncingClick(View v) {
+                            ImageView imageView = (ImageView) v;
+                            String description;
+                            String videoName;
+                            String videoUrl;
+                            String [] splitStr = null;
+                            if (!ObjectUtils.isEmpty(imageView.getContentDescription())) {
+                                description = imageView.getContentDescription().toString();
+                                splitStr = description.split(",");
+                                videoName = splitStr[0];
+                                videoUrl = splitStr[1];
+                            } else {
+                                videoName = null;
+                                videoUrl = null;
+                            }
+                            mFileLivePlayer.setVideoName(videoName);
+                            mFileLivePlayer.setVideoUrl(videoUrl);
+                            mFileLivePlayer.togglePlay();
+                        }
+                    });
+                    videoRecyclerLoading.clearAnimation();
+                    videoRecyclerLoading.setVisibility(View.GONE);
+
+                }
+            });
+        }
+
+        public void update() {
+            Map<String, VideoModel> videoModelMap = VideoModel.loadAllVideoModel(userModel.getUserName());
+            JSONArray videoNameList = new JSONArray();
+            for (Map.Entry<String, VideoModel> item : videoModelMap.entrySet()) {
+                videoNameList.add(item.getValue().getVideoName());
+            }
+            List<VideoRecyclerViewAdapter.ViewItem> newVideoRecyclerViewItemList = fetchVideo(videoNameList);
+
+            if (isNotifyInformation) {
+                if (newVideoRecyclerViewItemList.size() > mVideoRecyclerViewAdapter.getAllDataItem().size()) {
+                    handler.post(()->{
+                        PopNotification.show(R.drawable.notify_small, "The cat may be in danger...")
+                                .setAutoTintIconInLightOrDarkMode(false).showLong();
+                    });
+                }
+            }
+            mVideoRecyclerViewAdapter.setDataItem(newVideoRecyclerViewItemList);
+            handler.post(()->{
+                mVideoRecyclerViewAdapter.notifyDataSetChanged();
+            });
+        }
+    }
+
+    class MyFileLivePlayer {
+        private RelativeLayout mVideoFileLayout;
+        private VideoShowRelativeLayout mVideoFilePlayerLayout;
+        private LinearLayout mVideoShowLayout;
+        private ImageView mVideoFilePlayLogo;
+        private TXCloudVideoView mVideoFileVideoView;
+        private RelativeLayout mVideoFileInfoLayout;
+        private ImageButton mVideoFileInfoBtn;
+        private RelativeLayout mVideoFilePlayToolBar;
+        private ImageButton mVideoFilePlayBtn;
+        private ImageButton mVideoFileReduceBtn;
+        private ImageButton mVideoFileFetchBtn;
+        private ImageView mVideoFileLoadingImage;
+        private Animation mVideoFileVideoLoadingAnimation;
+        private V2TXLivePlayer mVideoFileLivePlayer;
+        private boolean mLivePlayerIsPlaying = false;
+        private boolean mIsPlaying = false;
+        private boolean mIsPlayToolAppearing = false;
+        private String videoUrl = null;
+        private String videoName = null;
+        private String roomName = null;
+
+        MyFileLivePlayer() {
+            mVideoFileLayout = findViewById(R.id.video_file_layout);
+            mVideoShowLayout = findViewById(R.id.video_show_root);
+            mVideoFilePlayerLayout = findViewById(R.id.video_file_player_layout);
+            mVideoFilePlayLogo = findViewById(R.id.video_file_play_logo);
+            mVideoFileVideoView = findViewById(R.id.video_file_video_view);
+            mVideoFileInfoLayout = findViewById(R.id.video_file_info_layout);
+            mVideoFileInfoBtn = findViewById(R.id.video_file_video_info_btn);
+            mVideoFilePlayToolBar = findViewById(R.id.video_file_play_tool_bar);
+            mVideoFilePlayBtn = findViewById(R.id.video_file_play_btn);
+            mVideoFileReduceBtn = findViewById(R.id.video_file_play_reduce);
+            mVideoFileFetchBtn = findViewById(R.id.video_file_play_fetch);
+            mVideoFileLoadingImage = findViewById(R.id.video_file_video_loading);
+            mVideoFileVideoLoadingAnimation = AnimationUtils.loadAnimation(
+                    ShowVideo.this, R.anim.animation_loading);
+        }
+
+        void setVideoUrl(String videoUrl) {
+            this.videoUrl = videoUrl;
+        }
+
+        public String getVideoUrl() {
+            return videoUrl;
+        }
+
+        public void setVideoName(String videoName) {
+            this.videoName = videoName;
+        }
+
+        public String getVideoName() {
+            return videoName;
+        }
+
+
+        void initialize() {
+            mVideoFileLivePlayer = new V2TXLivePlayerImpl(ShowVideo.this);
+            VideoOnClick onClick = new VideoOnClick(500);
+            mVideoFilePlayerLayout.setOnClickListener(onClick);
+            mVideoFilePlayBtn.setOnClickListener(onClick);
+            mVideoFileReduceBtn.setOnClickListener(onClick);
+            mVideoFileFetchBtn.setOnClickListener(onClick);
+        }
+
+
+        protected void onDestroy() {
+            if (mVideoFileVideoView != null) {
+                mVideoFileVideoView.onDestroy();
+                mVideoFileVideoView = null;
+            }
+        }
+
+        protected void toggleExit() {
+            mVideoShowLayout.setVisibility(View.VISIBLE);
+            mVideoFileLayout.setVisibility(View.GONE);
+            ScreenUtils.setPortrait(ShowVideo.this);
+            if (mLivePlayerIsPlaying) {
+                mALivePlayer.resumePlay();
+            } else {
+                mALivePlayer.stopPlay();
+            }
+
+            mVideoFileLivePlayer.stopPlay();
+            BarUtils.setStatusBarVisibility(ShowVideo.this, true);
+            new Thread(()->{
+                JSONObject reqBody = new JSONObject();
+                reqBody.put("user_name", userModel.getUserName());
+                reqBody.put("user_password", userModel.getPassword());
+                reqBody.put("room_name", roomName);
+                Response response = GLCCClient.doCommonPost(
+                        Constants.GLCC_KICK_DECT_VIDEO_FILE_URL, reqBody.toString());
+                if (ObjectUtils.isEmpty(response)) {
+                    Log.d(TAG, "Kick video room_name " + roomName + " fail!");
+                } else {
+                    if (response.code() == 200) {
+                        Log.d(TAG, "Kick video room_name " + roomName + " success!");
+                    } else {
+                        Log.d(TAG, "Kick video room_name " + roomName + " fail!");
+                    }
+                }
+                videoUrl = null;
+                videoName = null;
+                roomName = null;
+            }).start();
+        }
+
+        protected void togglePlay() {
+            startLoadingAnimation(); mVideoFilePlayLogo.setVisibility(View.GONE);
+            mVideoShowLayout.setVisibility(View.GONE);
+            mVideoFileLayout.setVisibility(View.VISIBLE);
+            mLivePlayerIsPlaying = mALivePlayer.mIsPlaying;
+            if (mLivePlayerIsPlaying) {
+                mALivePlayer.pausePlay();
+            } else {
+                mALivePlayer.stopPlay();
+            }
+            ScreenUtils.setLandscape(ShowVideo.this);
+            mVideoFilePlayerLayout.setRotateMode(VideoShowRelativeLayout.LANDSCAPE);
+            BarUtils.setStatusBarVisibility(ShowVideo.this, false);
+            BarUtils.addMarginTopEqualStatusBarHeight(mVideoShowToolBar);
+            fetchVideo();
+        }
+
+        protected void toggleResume() {
+            if (mIsPlaying) {
+                pausePlay();
+            } else {
+                resumePlay();
+            }
+        }
+
+        protected void togglePlayToolAppear() {
+            if (mIsPlayToolAppearing) {
+                playToolDisappearing();
+            } else {
+                playToolAppearing();
+            }
+        }
+
+        void fetchVideo() {
+            mVideoFilePlayBtn.setClickable(false);
+            mVideoFilePlayLogo.setVisibility(View.GONE);
+            startLoadingAnimation();
+            Log.d(TAG, "Detect Video File: "  + this.videoName + this.videoUrl);
+            if (ObjectUtils.isEmpty(videoUrl) || ObjectUtils.isEmpty(videoName)) {
+                Toast.makeText(ShowVideo.this, "Missing videoUrl or videoName to play", Toast.LENGTH_SHORT).show();
+                stopLoadingAnimation();
+                mVideoFilePlayLogo.setVisibility(View.VISIBLE);
+                mVideoFilePlayBtn.setClickable(true);
+            } else {
+                JSONObject reqBody = new JSONObject();
+                reqBody.put("user_name", userModel.getUserName());
+                reqBody.put("user_password", userModel.getPassword());
+                reqBody.put("video_name", videoName);
+                reqBody.put("video_url", videoUrl);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Response response = GLCCClient.doCommonPost(
+                                Constants.GLCC_DECT_VIDEO_FILE_URL, reqBody.toString());
+                        int playCode = V2TXLIVE_ERROR_FAILED;
+                        if (ObjectUtils.isEmpty(response)) {
+                            handler.post(()->{
+                                Toast.makeText(ShowVideo.this, "Detect Video File Request Error", Toast.LENGTH_SHORT).show();
+                            });
+                        } else {
+                            if (response.code() == 200) {
+                                JSONObject respBody = null;
+                                try {
+                                    respBody = JSONObject.fromObject(response.body().string());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                if (!ObjectUtils.isEmpty(reqBody)) {
+                                    roomName = respBody.getString("room_name");
+                                    String roomUrl = String.format("%s/%s.flv", Constants.GLCC_VIDEO_PLAYER_BASE_URL, roomName);
+                                    Log.d(TAG, "Video File Room Url: " + roomUrl);
+                                    playCode = mALivePlayer.checkPlayURL(roomUrl);
+                                    if (playCode != V2TXLIVE_OK) {
+                                        handler.post(()->{
+                                            Toast.makeText(ShowVideo.this, "Invalidate Url", Toast.LENGTH_SHORT).show();
+                                        });
+                                    } else {
+                                        mVideoFileLivePlayer.setRenderView(mVideoFileVideoView);
+                                        mVideoFileLivePlayer.setObserver(new MyPlayerObserver());
+                                        mVideoFileLivePlayer.setRenderRotation(V2TXLiveDef.V2TXLiveRotation.V2TXLiveRotation0);
+                                        mVideoFileLivePlayer.setRenderFillMode(V2TXLiveDef.V2TXLiveFillMode.V2TXLiveFillModeFit);
+                                        playCode = mVideoFileLivePlayer.startPlay(roomUrl);
+                                    }
+                                } else {
+                                    handler.post(()->{
+                                        Toast.makeText(ShowVideo.this, "Detect Video File Request System Error!", Toast.LENGTH_SHORT).show();
+                                    });
+                                }
+                            } else {
+                                handler.post(()->{
+                                    Toast.makeText(ShowVideo.this, "Detect Video File Request Error! Code: " + response.code(), Toast.LENGTH_SHORT).show();
+                                });
+                            }
+                        }
+                        mIsPlaying = playCode == V2TXLIVE_OK;
+                        int finalPlayCode = playCode;
+                        handler.post(()->{
+                            onPlayStart(finalPlayCode);
+                        });
+
+                    }
+                }).start();
+            }
+        }
+
+        protected void onPlayStart(int code) {
+            mVideoFilePlayBtn.setClickable(true);
+            if (code != V2TXLIVE_OK) {
+                mVideoFilePlayBtn.setBackgroundResource(R.drawable.play_button);
+                mVideoFilePlayerLayout.setBackgroundResource(R.drawable.bg_video_show_root_layout);
+                mVideoFilePlayLogo.setVisibility(View.VISIBLE);
+                stopLoadingAnimation();
+                mVideoFilePlayToolBar.setVisibility(View.VISIBLE);
+                mVideoFilePlayToolBar
+                        .animate()
+                        .alpha(1f)
+                        .setDuration(toolbarFadeTime).setListener(null);
+                mVideoFileInfoLayout.setVisibility(View.VISIBLE);
+                mVideoFileInfoLayout
+                        .animate()
+                        .alpha(1f)
+                        .setDuration(toolbarFadeTime).setListener(null);
+                mVideoFilePlayerLayout.setClickable(false);
+            } else {
+                mVideoFilePlayBtn.setBackgroundResource(R.drawable.stop_button);
+                mVideoFilePlayerLayout.setBackgroundResource(R.drawable.bg_video_show_root_layout2);
+                mVideoFilePlayLogo.setVisibility(View.GONE);
+                mVideoFilePlayToolBar
+                        .animate()
+                        .alpha(0f)
+                        .setDuration(toolbarFadeTime)
+                        .setListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                mVideoFilePlayToolBar.setVisibility(View.GONE);
+                            }
+                        });
+                mVideoFileInfoLayout
+                        .animate()
+                        .alpha(0f)
+                        .setDuration(toolbarFadeTime)
+                        .setListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                mVideoFileInfoLayout.setVisibility(View.GONE);
+                            }
+                        });
+                mVideoFilePlayerLayout.setClickable(true);
+            }
+        }
+
+
+        protected void onPlayPause() {
+            mVideoFilePlayBtn.setBackgroundResource(R.drawable.play_button);
+            mVideoFilePlayToolBar.setVisibility(View.VISIBLE);
+            mVideoFilePlayToolBar
+                    .animate()
+                    .alpha(1f)
+                    .setDuration(toolbarFadeTime).setListener(null);
+            mVideoFileInfoLayout.setVisibility(View.VISIBLE);
+            mVideoFileInfoLayout
+                    .animate()
+                    .alpha(1f)
+                    .setDuration(toolbarFadeTime).setListener(null);
+            mVideoShowLayout.setClickable(false);
+            stopLoadingAnimation();
+        }
+
+        protected void onPlayResume() {
+            mVideoFilePlayBtn.setBackgroundResource(R.drawable.stop_button);
+            mVideoFilePlayLogo.setVisibility(View.GONE);
+            mVideoFilePlayToolBar
+                    .animate()
+                    .alpha(0f)
+                    .setDuration(toolbarFadeTime)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            mVideoFilePlayToolBar.setVisibility(View.GONE);
+                        }
+                    });
+            mVideoFilePlayToolBar
+                    .animate()
+                    .alpha(0f)
+                    .setDuration(toolbarFadeTime)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            mVideoFilePlayToolBar.setVisibility(View.GONE);
+                        }
+                    });
+            mVideoShowLayout.setClickable(true);
+        }
+
+        protected void pausePlay() {
+            if (!mIsPlaying) {
+                return;
+            }
+            if (mVideoFileLivePlayer != null) {
+                mVideoFileLivePlayer.pauseVideo();
+            }
+            mIsPlaying = false;
+            onPlayPause();
+        }
+
+        protected void resumePlay() {
+            if (mIsPlaying) {
+                return;
+            }
+            int code;
+            if (mVideoFileLivePlayer != null) {
+                code = mVideoFileLivePlayer.resumeVideo();
+            } else {
+                code = V2TXLIVE_ERROR_FAILED;
+            }
+            if (code == V2TXLIVE_OK) {
+                mIsPlaying = true;
+                onPlayResume();
+            }
+        }
+
+        protected void playToolAppearing() {
+            mIsPlayToolAppearing = true;
+            mVideoFilePlayToolBar.setVisibility(View.VISIBLE);
+            mVideoFilePlayToolBar
+                    .animate()
+                    .alpha(1f)
+                    .setDuration(toolbarFadeTime).setListener(null);
+            mVideoFileInfoLayout.setVisibility(View.VISIBLE);
+            mVideoFileInfoLayout
+                    .animate()
+                    .alpha(1f)
+                    .setDuration(toolbarFadeTime).setListener(null);
+            mVideoFilePlayerLayout.setClickable(true);
+        }
+
+        protected void playToolDisappearing() {
+            mIsPlayToolAppearing = false;
+            mVideoFilePlayToolBar
+                    .animate()
+                    .alpha(0f)
+                    .setDuration(toolbarFadeTime)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            mVideoFilePlayToolBar.setVisibility(View.GONE);
+                        }
+                    });
+            mVideoFileInfoLayout
+                    .animate()
+                    .alpha(0f)
+                    .setDuration(toolbarFadeTime)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            mVideoFileInfoLayout.setVisibility(View.GONE);
+                        }
+                    });
+            mVideoFilePlayerLayout.setClickable(true);
+        }
+
+        protected void startLoadingAnimation() {
+            if (mVideoFileLoadingImage != null) {
+                mVideoFileLoadingImage.setVisibility(View.VISIBLE);
+                mVideoFileLoadingImage.startAnimation(mVideoFileVideoLoadingAnimation);
+            }
+        }
+
+        private void stopLoadingAnimation() {
+            if (mVideoFileLoadingImage.getAnimation() != null) {
+                mVideoFileLoadingImage.clearAnimation();
+                mVideoFileLoadingImage.setVisibility(View.GONE);
+            }
+        }
+
+        class VideoOnClick extends ClickUtils.OnDebouncingClickListener {
+            public VideoOnClick(final long duration) {
+                super(true, duration);
+            }
+            @Override
+            public void onDebouncingClick(View v) {
+                switch (v.getId()) {
+                    case R.id.video_file_play_reduce: {
+                        toggleExit();
+                        break;
+                    }
+                    case R.id.video_file_play_btn: {
+                        toggleResume();
+                        break;
+                    }
+                    case R.id.video_file_player_layout: {
+                        togglePlayToolAppear();
+                        break;
+                    }
+                    case R.id.video_file_play_fetch: {
+                        fetchVideo();
+                        break;
+                    }
+                    default:
+                        throw new IllegalStateException("Unknown value " + v.getId());
+                }
+            }
+        }
+
+        protected class MyPlayerObserver extends V2TXLivePlayerObserver {
+            @Override
+            public void onWarning(V2TXLivePlayer player, int code, String msg, Bundle extrainfo) {
+                Log.w(TAG, "[Player] onWarning: player-" + player + " code-" + code + " msg-" + msg + " info-" + extrainfo);
+                toggleExit();
+            }
+
+            @Override
+            public void onError(V2TXLivePlayer player, int code, String msg, Bundle extrainfo) {
+                Log.e(TAG, "[Player] onError: player-" + player + " code-" + code + " msg-" + msg + " info-" + extrainfo);
+                toggleExit();
+            }
+
+            @Override
+            public void onSnapshotComplete(V2TXLivePlayer v2TXLivePlayer, Bitmap bitmap) {
+            }
+
+            @Override
+            public void onVideoResolutionChanged(V2TXLivePlayer player, int width, int height) {
+            }
+
+            @Override
+            public void onStatisticsUpdate(V2TXLivePlayer v2TXLivePlayer, V2TXLiveDef.V2TXLivePlayerStatistics statistics) {
+                Bundle netStatus = new Bundle();
+                netStatus.putInt(TXLiveConstants.NET_STATUS_VIDEO_WIDTH, statistics.width);
+                netStatus.putInt(TXLiveConstants.NET_STATUS_VIDEO_HEIGHT, statistics.height);
+                int appCpu = statistics.appCpu / 10;
+                int totalCpu = statistics.systemCpu / 10;
+                String strCpu = appCpu + "/" + totalCpu + "%";
+                netStatus.putCharSequence(TXLiveConstants.NET_STATUS_CPU_USAGE, strCpu);
+                netStatus.putInt(TXLiveConstants.NET_STATUS_NET_SPEED, statistics.videoBitrate + statistics.audioBitrate);
+                netStatus.putInt(TXLiveConstants.NET_STATUS_AUDIO_BITRATE, statistics.audioBitrate);
+                netStatus.putInt(TXLiveConstants.NET_STATUS_VIDEO_BITRATE, statistics.videoBitrate);
+                netStatus.putInt(TXLiveConstants.NET_STATUS_VIDEO_FPS, statistics.fps);
+                netStatus.putInt(TXLiveConstants.NET_STATUS_AUDIO_CACHE, 0);
+                netStatus.putInt(TXLiveConstants.NET_STATUS_VIDEO_CACHE, 0);
+                netStatus.putInt(TXLiveConstants.NET_STATUS_V_SUM_CACHE_SIZE, 0);
+                netStatus.putInt(TXLiveConstants.NET_STATUS_V_DEC_CACHE_SIZE, 0);
+                netStatus.putString(TXLiveConstants.NET_STATUS_AUDIO_INFO, "");
+                Log.d(TAG, "Current status, CPU:" + netStatus.getString(TXLiveConstants.NET_STATUS_CPU_USAGE) +
+                        ", RES:" + netStatus.getInt(TXLiveConstants.NET_STATUS_VIDEO_WIDTH) + "*" + netStatus.getInt(TXLiveConstants.NET_STATUS_VIDEO_HEIGHT) +
+                        ", SPD:" + netStatus.getInt(TXLiveConstants.NET_STATUS_NET_SPEED) + "Kbps" +
+                        ", FPS:" + netStatus.getInt(TXLiveConstants.NET_STATUS_VIDEO_FPS) +
+                        ", ARA:" + netStatus.getInt(TXLiveConstants.NET_STATUS_AUDIO_BITRATE) + "Kbps" +
+                        ", VRA:" + netStatus.getInt(TXLiveConstants.NET_STATUS_VIDEO_BITRATE) + "Kbps");
+            }
+
+            @Override
+            public void onVideoPlaying(V2TXLivePlayer v2TXLivePlayer, boolean firstPlay, Bundle extraInfo) {
+                if (firstPlay) {
+                    stopLoadingAnimation();
+                }
+            }
+
+            @Override
+            public void onVideoLoading(V2TXLivePlayer v2TXLivePlayer, Bundle extrainfo) {
+                startLoadingAnimation();
+            }
+
+        }
+    }
 }
 

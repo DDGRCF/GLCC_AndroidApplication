@@ -209,11 +209,11 @@ public class DrawView extends View {
             canvas.drawPath(path, mPaint);
         }
 
-        for (Map.Entry<String, List<Path>> path_entry: mConfirmPathMap.entrySet()) {
-            for (Path path : path_entry.getValue()) {
-                canvas.drawPath(path, mPaint);
-            }
-        }
+//        for (Map.Entry<String, List<Path>> path_entry: mConfirmPathMap.entrySet()) {
+//            for (Path path : path_entry.getValue()) {
+//                canvas.drawPath(path, mPaint);
+//            }
+//        }
     }
 
     public boolean canConfirm() {
@@ -333,7 +333,6 @@ public class DrawView extends View {
             int height = DrawView.this.getHeight();
             int width = DrawView.this.getWidth();
             List<Float> pointList = path2Points(pathList, interval, height, width, getmCanvasRatio());
-            Log.d("mDraw", pointList.toString());
             return pointList;
         } else {
             return null;
@@ -357,10 +356,12 @@ public class DrawView extends View {
             mConfirmPathMap.clear();
             for (Map.Entry<String, ContourModel> item : allContourModel.entrySet()) {
                 List<Float> pathOfPoints = item.getValue().getContourPath();
-                Path path = points2Path(pathOfPoints, getmCanvasRatio());
-                List<Path> pathList = new ArrayList<>();
-                pathList.add(path);
-                mConfirmPathMap.put(item.getValue().getContourName(), pathList);
+                if (!ObjectUtils.isEmpty(pathOfPoints)) {
+                    Path path = points2Path(pathOfPoints, getmCanvasRatio());
+                    List<Path> pathList = new ArrayList<>();
+                    pathList.add(path);
+                    mConfirmPathMap.put(item.getValue().getContourName(), pathList);
+                }
             }
             return true;
         } else {

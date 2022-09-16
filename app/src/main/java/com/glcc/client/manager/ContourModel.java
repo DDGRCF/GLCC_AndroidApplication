@@ -36,6 +36,10 @@ public class ContourModel {
         SPUtils.getInstance(TAG).getInstance(userName).getInstance(videoName).clear();
     }
 
+    public static void clearContourModel(String userName) {
+        SPUtils.getInstance(TAG).getInstance(userName).clear();
+    }
+
     public static void removeContourModel(String userName, String videoName, String contourName) {
         SPUtils.getInstance(TAG).getInstance(userName).getInstance(videoName).remove(contourName);
     }

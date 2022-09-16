@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import com.blankj.utilcode.util.BarUtils;
 import com.blankj.utilcode.util.ClickUtils;
+import com.blankj.utilcode.util.PermissionUtils;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -55,12 +56,12 @@ public class SplashScreen extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         finish();
+        overridePendingTransition(0, 0);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        new Handler().removeCallbacksAndMessages(null);
     }
 
     private void mTransitionAnimation() {

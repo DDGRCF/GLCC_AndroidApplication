@@ -2,7 +2,7 @@
 <resources>
     <color name="start_login_font">#FF000000</color>
     <color name="plane_theme">#FFFECE2F</color>
-    <color name="main_theme">#11000000</color>
+    <color name="main_theme">#FFF2F2F2</color>
     <color name="videoplayer_content_end_color">#BB000000</color>
     <color name="videoplayer_content_start_color">#BB000000</color>
     <color name="videoplayer_content_stop_color">#EE000000</color>

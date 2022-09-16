@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+    <com.glcc.client.VideoShowRelativeLayout
+        android:id="@+id/recorder_video_recycler_relative_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp">
+
+        <ImageView
+            android:id="@+id/recorder_video_recycler_image"
+            android:layout_width="120dp"
+            android:layout_height="80dp"
+            android:scaleType="fitCenter" />
+    </com.glcc.client.VideoShowRelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_toEndOf="@+id/recorder_video_recycler_relative_layout"
+        android:background="#11AAAAAA"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/recorder_video_recycler_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="marquee"
+            android:singleLine="true"
+            android:fontFamily="@font/bluestone"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:focusableInTouchMode="true"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/recorder_video_recycler_video_url"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/recorder_video_recycler_title"
+            android:layout_marginTop="5dp"
+            android:ellipsize="marquee"
+            android:singleLine="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:focusableInTouchMode="true"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/recorder_video_recycler_start_time"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/recorder_video_recycler_video_url"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_toEndOf="@+id/recorder_video_recycler_video_url"
+            android:ellipsize="marquee"
+            android:singleLine="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:focusableInTouchMode="true"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/recorder_video_recycler_end_time"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/recorder_video_recycler_start_time"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_toEndOf="@+id/recorder_video_recycler_start_time"
+            android:ellipsize="marquee"
+            android:singleLine="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:focusableInTouchMode="true"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/recorder_video_recycler_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/recorder_video_recycler_start_time"
+            android:layout_marginTop="5dp"
+            android:ellipsize="marquee"
+            android:singleLine="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:focusableInTouchMode="true"
+            android:textSize="13sp" />
+    </RelativeLayout>
+</RelativeLayout>

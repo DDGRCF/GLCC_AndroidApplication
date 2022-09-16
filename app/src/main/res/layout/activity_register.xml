@@ -54,6 +54,7 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/register_username_edit"
                 android:transitionName="@string/username_text_transition_name"
+                android:singleLine="true"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/hint_username"/>
@@ -65,6 +66,7 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/register_nickname_edit"
                 android:transitionName="@string/username_text_transition_name"
+                android:singleLine="true"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/hint_nikename"/>
@@ -76,6 +78,7 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/register_password_edit"
+                android:singleLine="true"
                 android:transitionName="@string/password_text_transition_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -90,6 +93,7 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/register_repassword_edit"
                 android:transitionName="@string/password_text_transition_name"
+                android:singleLine="true"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"

@@ -6,11 +6,12 @@
         android:id="@+id/video_source_item"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="13sp"
+        android:textSize="10sp"
         android:ellipsize="marquee"
         android:singleLine="true"
         android:gravity="center"
         android:padding="5dp"
         android:textColor="#FF000000"
+        android:fontFamily="@font/bluestone"
         android:layout_gravity="center"/>
 </LinearLayout>
