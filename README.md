@@ -40,7 +40,9 @@
 <img src="./asserts/serverInstance.png" width="" height = "" alt="server-Instance" align=center/>
 
 ## 客服端
+<div algin="center">
 <img src="./asserts/clientInstanceSplash.jpg" width="190" height = "" alt="server-Instance"/>  <img src="./asserts/clientInstanceLogin.jpg" width="190" height = "" alt="server-Instance"/>  <img src="./asserts/clientInstanceRegister.jpg" width="190" height = "" alt="server-Instance"/>  <img src="./asserts/clientInstanceMain.jpg" width="190" height = "" alt="server-Instance"/>
+</div>
 
 # 安装
 ### 环境依赖
