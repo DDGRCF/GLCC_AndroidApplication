@@ -14,7 +14,7 @@
 
 <p align="center">
     <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/build-test-red' alt="Build Status"></a>  
-    <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/role-server-orange'></a>
+    <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/role-client-green'></a>
 </p>
 
 # 介绍
