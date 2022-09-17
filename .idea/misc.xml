@@ -26,6 +26,9 @@
         <entry key="app/src/main/res/drawable/bg_video_toolbar_view.xml" value="0.2215" />
         <entry key="app/src/main/res/drawable/bg_videoplayer_content.xml" value="0.246" />
         <entry key="app/src/main/res/drawable/ic__80_ring_with_bg.xml" value="0.233" />
+        <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.1605" />
+        <entry key="app/src/main/res/drawable/ic_launcher_cat_background.xml" value="0.1605" />
+        <entry key="app/src/main/res/drawable/ic_launcher_toyger_cat_foreground.xml" value="0.1605" />
         <entry key="app/src/main/res/drawable/videoplayer_content_bg.xml" value="0.1" />
         <entry key="app/src/main/res/font/banger.xml" value="0.24479166666666666" />
         <entry key="app/src/main/res/layout-v26/activity_show_video.xml" value="0.12462006079027356" />
@@ -49,6 +52,7 @@
         <entry key="app/src/main/res/layout/video_source_register_dialog.xml" value="0.33" />
         <entry key="app/src/main/res/layout/video_source_spinner.xml" value="0.1" />
         <entry key="app/src/main/res/menu/video_show_nav_menu.xml" value="0.2344763670064875" />
+        <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.1605" />
       </map>
     </option>
   </component>
