@@ -1,9 +1,18 @@
-<img src="./asserts/logoWithText.png" width = "488" height = "159" alt="logo-catcat" align=center />
+<div>&nbsp;</div>
+<div align="center">
 
-<img style="margin-top:10px" src="./asserts/gitlink&&mmdeploy.png" width="" height = "50" alt="logo-mmdeply&&gitlink" align=center/>
+<div>
+<img src="./asserts/logoWithText.png" width = "488" height = "159" alt="logo-catcat" align=center />
+</div>
+<div>&nbsp;</div>
+<div>
+<img src="./asserts/gitlink&&mmdeploy.png" width="" height = "40" alt="logo-mmdeply&&gitlink" align=center/>
+</div>
+</div>
 
 # Cat Cat | MMDeply $\times$ GLCC 开源项目 | MMDeploy 实践
-<p align="left">
+
+<p align="center">
     <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/build-test-red' alt="Build Status"></a>  
     <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/role-server-orange'></a>
 </p>
