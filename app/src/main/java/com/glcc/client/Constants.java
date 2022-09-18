@@ -21,8 +21,9 @@ public class Constants {
     public static String GLCC_VIDEO_PLAYER_BASE_URL = "http://" + GLCC_SERVER_IP + ":" + GLCC_PLAYER_PORT + "/live";
     public static final String GLCC_DEFAULT_VIDEO_NAME = "test";
 
-    @SuppressLint("DefaultLocale")
-    public static String GLCC_SERVER_URL = String.format("%s:%d", GLCC_SERVER_HOST, GLCC_SERVER_PORT);
+//    @SuppressLint("DefaultLocale")
+//    public static String GLCC_SERVER_URL = String.format("%s:%d", GLCC_SERVER_HOST, GLCC_SERVER_PORT);
+    public static String GLCC_SERVER_URL = GLCC_SERVER_HOST + ":" + GLCC_SERVER_PORT;
 
     public static String GLCC_HELLO_URI = "/hello_world";
     public static String GLCC_HELLO_URL = GLCC_SERVER_URL + GLCC_HELLO_URI;
@@ -74,7 +75,7 @@ public class Constants {
     protected static void reLoadData() {
         GLCC_SERVER_HOST = "https://" + GLCC_SERVER_IP;
         GLCC_VIDEO_PLAYER_BASE_URL = "http://" + GLCC_SERVER_IP + ":" + GLCC_PLAYER_PORT + "/live";
-        GLCC_SERVER_URL = String.format("%s:%d", GLCC_SERVER_HOST, GLCC_SERVER_PORT);
+        GLCC_SERVER_URL = GLCC_SERVER_HOST + ":" + GLCC_SERVER_PORT;
         GLCC_HELLO_URL = GLCC_SERVER_URL + GLCC_HELLO_URI;
         GLCC_LOGIN_URL = GLCC_SERVER_URL + GLCC_LOGIN_URI;
         GLCC_REGISTER_URL = GLCC_SERVER_URL + GLCC_REGISTER_URI;

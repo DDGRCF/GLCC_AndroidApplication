@@ -13,8 +13,11 @@
 # Cat Cat | MMDeply $\times$ GLCC 开源项目 | MMDeploy 实践
 
 <p align="center">
-    <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/build-test-red' alt="Build Status"></a>  
-    <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/role-client-green'></a>
+    <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/system-linux-blue' alt="System"></a>  
+    &nbsp;
+    <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/role-client-green' alt="Role"></a>
+    &nbsp;
+    <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/build-test-red' alt="Build"></a>  
 </p>
 
 # 介绍
@@ -30,19 +33,18 @@
 目前，该项目包括两个部分:
 
 * [能够响应Http请求，完成检测跟踪的服务器](https://github.com/DDGRCF/GLCC_Server)
-* <u>**能够发起Http请求，完成实现播放的客服端**&emsp;⬅️️️(**目前位置**)</u>
+* **能够发起Http请求，完成实现播放的客服端**⬅️ **(目前位置)**
 
 
 # 预览
 
+
 ## 服务器
 
-<img src="./asserts/serverInstance.png" width="" height = "" alt="server-Instance" align=center/>
+![serverInstance](/asserts/serverInstance.gif)
 
 ## 客服端
-<div algin="center">
-<img src="./asserts/clientInstanceSplash.jpg" width="190" height = "" alt="server-Instance"/>  <img src="./asserts/clientInstanceLogin.jpg" width="190" height = "" alt="server-Instance"/>  <img src="./asserts/clientInstanceRegister.jpg" width="190" height = "" alt="server-Instance"/>  <img src="./asserts/clientInstanceMain.jpg" width="190" height = "" alt="server-Instance"/>
-</div>
+<img src="./asserts/clientInstanceSplash.jpg" width="190" height = "411" alt="server-Instance"/>  <img src="./asserts/clientInstanceLogin.jpg" width="190" height = "411" alt="server-Instance"/>  <img src="./asserts/clientInstanceRegister.jpg" width="190" height = "411" alt="server-Instance"/>  <img src="./asserts/clientInstance.gif" width="190" height = "411" alt="server-Instance"/>
 
 # 安装
 ### 环境依赖
