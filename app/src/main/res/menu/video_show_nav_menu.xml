@@ -4,9 +4,13 @@
     android:layout_height="match_parent">
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/video_show_open_draw_lays"
+            android:id="@+id/video_show_open_notify"
             android:icon="@drawable/notify"
             android:title="Turn On Notifications"/>
+        <item
+            android:id="@+id/video_show_set_server"
+            android:icon="@drawable/gear"
+            android:title="Set Server Information"/>
     </group>
 
 </menu>

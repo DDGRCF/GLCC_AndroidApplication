@@ -23,19 +23,21 @@
                 android:layout_height="40dp"
                 app:contentInsetStartWithNavigation="0dp"
                 app:navigationIcon="@drawable/more">
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:paddingEnd="20dp"
-                    android:focusable="false"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-                    <com.google.android.material.textfield.TextInputEditText
+                    <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:textSize="13sp"
-                        android:hint="Search"/>
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:layout_marginEnd="20dp"
+                        android:focusable="false"
+                        android:focusableInTouchMode="true"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:textSize="13sp"
+                            android:hint="Coding..."/>
+                    </com.google.android.material.textfield.TextInputLayout>
             </androidx.appcompat.widget.Toolbar>
+
             <TextView
                 android:id="@+id/video_show_info_bar"
                 android:layout_width="match_parent"
@@ -45,11 +47,11 @@
                 android:layout_marginEnd="5dp"
                 android:background="@drawable/bg_video_source_tool_bar"
                 android:elevation="3dp"
-                android:padding="5dp"
-                android:gravity="center"
                 android:fontFamily="@font/babycake"
+                android:gravity="center"
+                android:padding="5dp"
                 android:text="Weclome to Cat Cat Application"
-                android:textSize="15sp"/>
+                android:textSize="15sp" />
             <com.glcc.client.VideoShowRelativeLayout
                 android:id="@+id/video_show_layout_root"
                 android:layout_width="match_parent"
@@ -207,60 +209,61 @@
                 <RelativeLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/bg_video_function_layout"
                     android:layout_centerInParent="true"
                     android:layout_alignParentStart="true"
-                    android:layout_marginStart="10dp">
+                    android:layout_marginStart="5dp"
+                    android:paddingEnd="5dp">
 
                     <TextView
                         android:id="@+id/view_video_source_register"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
-                        android:fontFamily="@font/bluestone"
+                        android:background="@drawable/bg_video_source_register"
+                        android:fontFamily="@font/bd_cartoon_shout"
                         android:padding="5dp"
                         android:text="@string/video_source_register"
                         android:textColor="#FF000000"
-                        android:background="@drawable/bg_video_source_register"
-                        android:textSize="10sp" />
+                        android:textSize="11sp" />
 
                     <TextView
                         android:id="@+id/view_video_source_delete"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
-                        android:fontFamily="@font/bluestone"
                         android:layout_toRightOf="@+id/view_video_source_register"
                         android:background="@drawable/bg_video_source_register"
+                        android:fontFamily="@font/bd_cartoon_shout"
                         android:padding="5dp"
                         android:text="@string/video_source_delete"
                         android:textColor="#FF000000"
-                        android:textSize="10sp" />
+                        android:textSize="11sp" />
 
                     <TextView
                         android:id="@+id/view_video_draw_lattice"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
-                        android:fontFamily="@font/bluestone"
+                        android:fontFamily="@font/bd_cartoon_shout"
                         android:layout_toRightOf="@+id/view_video_source_delete"
                         android:padding="5dp"
                         android:text="DRAW"
                         android:textColor="#FF000000"
                         android:background="@drawable/bg_video_source_register"
-                        android:textSize="10sp" />
-
+                        android:textSize="11sp" />
                 </RelativeLayout>
 
                 <RelativeLayout
-                    android:layout_width="180dp"
+                    android:layout_width="165dp"
                     android:layout_height="match_parent"
+                    android:layout_marginStart="10dp"
                     android:layout_alignParentEnd="true"
-                    android:layout_centerInParent="true"
-                    android:paddingStart="10dp">
+                    android:layout_centerInParent="true">
 
                     <Spinner
                         android:id="@+id/video_source_spinner"
-                        android:layout_width="100dp"
+                        android:layout_width="95dp"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_centerInParent="true"
@@ -268,14 +271,14 @@
                         android:tooltipText="@string/video_source_title" />
 
                     <TextView
-                        android:layout_width="80dp"
+                        android:layout_width="70dp"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
+                        android:fontFamily="@font/bd_cartoon_shout"
                         android:text="@string/video_source_title"
                         android:textColor="#FF000000"
-                        android:fontFamily="@font/bluestone"
-                        android:textSize="10sp" />
+                        android:textSize="11sp" />
                 </RelativeLayout>
             </RelativeLayout>
             <RelativeLayout
@@ -391,5 +394,6 @@
         app:menu="@menu/video_show_nav_menu"
         app:itemBackground="@drawable/bg_video_nav_item"
         app:itemTextAppearance="@style/ThemeOverlay.Material3.NavigationView"
-        android:layout_gravity="start"/>
+        android:layout_gravity="start"
+        app:itemShapeAppearance="@style/mNavMenuTextStyle"/>
 </androidx.drawerlayout.widget.DrawerLayout>

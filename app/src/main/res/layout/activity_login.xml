@@ -1,113 +1,129 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/login_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Login"
-    android:orientation="vertical"
     android:background="@color/main_theme"
     android:padding="20dp">
-    <ImageView
-        android:id="@+id/login_logo"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:src="@drawable/toyger_cat"
-        android:layout_marginTop="25dp"
-        android:transitionName="@string/logo_image_transition_name"
-        android:contentDescription="@string/login_image_description" />
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:orientation="vertical">
-        <TextView
-            android:id="@+id/weclome_back_txt"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/bluestone"
-            android:transitionName="@string/logo_text_transition_name"
-            android:text="@string/login_hello"
-            android:textColor="@color/start_login_font"
-            android:textSize="37sp"/>
-        <TextView
-            android:id="@+id/continue_back_txt"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/login_continue"
-            android:transitionName="@string/desc_text_transition_name"
-            android:textSize="18sp"
-            android:fontFamily="@font/babycake"/>
-    </LinearLayout>
-    
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="20dp"
-        android:orientation="vertical">
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_marginTop="10dp"
-            android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_marginBottom="45dp"
+        >
+        <ImageView
+            android:id="@+id/login_logo"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/toyger_cat"
+            android:layout_marginTop="25dp"
+            android:transitionName="@string/logo_image_transition_name"
+            android:contentDescription="@string/login_image_description" />
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="@string/hint_username"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/username_input_edit"
-                android:transitionName="@string/username_text_transition_name"
-                android:singleLine="true"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-        </com.google.android.material.textfield.TextInputLayout>
+            android:layout_marginTop="20dp"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/weclome_back_txt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/bluestone"
+                android:transitionName="@string/logo_text_transition_name"
+                android:text="@string/login_hello"
+                android:textColor="@color/start_login_font"
+                android:textSize="37sp"/>
+            <TextView
+                android:id="@+id/continue_back_txt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/login_continue"
+                android:transitionName="@string/desc_text_transition_name"
+                android:textSize="18sp"
+                android:fontFamily="@font/babycake"/>
+        </LinearLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/hint_password"
-            app:passwordToggleEnabled="true"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/password_input_edit"
-                android:transitionName="@string/password_text_transition_name"
-                android:singleLine="true"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
+            android:orientation="vertical">
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_marginTop="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPassword"/>
-        </com.google.android.material.textfield.TextInputLayout>
+                android:hint="@string/hint_username"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/username_input_edit"
+                    android:transitionName="@string/username_text_transition_name"
+                    android:singleLine="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <TextView
-            android:id="@+id/forget_password_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_forget_signup"
-            android:layout_marginTop="15dp"
-            android:layout_marginEnd="15dp"
-            android:text="@string/button_forget_password"
-            android:textColor="@color/start_login_font"
-            android:layout_gravity="end"
-            android:textSize="13sp"
-            android:elevation="0dp"/>
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/hint_password"
+                app:passwordToggleEnabled="true"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/password_input_edit"
+                    android:transitionName="@string/password_text_transition_name"
+                    android:singleLine="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <Button
-            android:id="@+id/go_login_btn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:text="@string/button_go"
-            android:background="@drawable/bg_go_signin"
-            android:textColor="#FFFF"/>
+            <TextView
+                android:id="@+id/forget_password_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_forget_signup"
+                android:layout_marginTop="15dp"
+                android:layout_marginEnd="15dp"
+                android:text="@string/button_forget_password"
+                android:textColor="@color/start_login_font"
+                android:layout_gravity="end"
+                android:textSize="13sp"
+                android:elevation="0dp"/>
 
-        <TextView
-            android:id="@+id/go_sign_up_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="13sp"
-            android:layout_marginTop="15dp"
-            android:layout_gravity="center"
-            android:transitionName="@string/register_text_transition_name"
-            android:text="@string/button_sign_up_skip"
-            android:background="@drawable/bg_forget_signup"
-            android:textColor="@color/start_login_font"/>
+            <Button
+                android:id="@+id/go_login_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:text="@string/button_go"
+                android:background="@drawable/bg_go_signin"
+                android:textColor="#FFFF"/>
+
+            <TextView
+                android:id="@+id/go_sign_up_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:layout_marginTop="15dp"
+                android:layout_gravity="center"
+                android:transitionName="@string/register_text_transition_name"
+                android:text="@string/button_sign_up_skip"
+                android:background="@drawable/bg_forget_signup"
+                android:textColor="@color/start_login_font"/>
+        </LinearLayout>
+
     </LinearLayout>
-</LinearLayout>
+    <ImageButton
+        android:id="@+id/login_server_setting"
+        android:layout_width="23dp"
+        android:layout_height="23dp"
+        android:background="@drawable/gear"
+        android:clickable="true"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:focusable="true" />
+</RelativeLayout>

@@ -1,7 +1,5 @@
 package com.glcc.client;
 
-import static com.glcc.client.manager.VideoModel.removeVideoModel;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,6 +16,7 @@ import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,6 +27,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import com.blankj.utilcode.util.BarUtils;
+import com.blankj.utilcode.util.SPUtils;
 import com.glcc.client.manager.ContourModel;
 import com.glcc.client.manager.UserModel;
 import com.glcc.client.manager.VideoModel;
@@ -41,7 +41,10 @@ import java.util.Objects;
 
 import com.blankj.utilcode.util.ObjectUtils;
 import com.blankj.utilcode.util.ClickUtils;
+import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
+import com.kongzue.dialogx.interfaces.OnBindView;
+import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 
 
 public class Login extends AppCompatActivity {
@@ -54,6 +57,7 @@ public class Login extends AppCompatActivity {
     private TextView mTxtBtnForget;
     private TextView mTxtBtnRegister;
     private Handler handler;
+    private ImageButton mImageBtnServerSetting;
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -70,11 +74,13 @@ public class Login extends AppCompatActivity {
         mTxtBtnLoginGO = findViewById(R.id.go_login_btn);
         mTxtBtnForget = findViewById(R.id.forget_password_btn);
         mTxtBtnRegister = findViewById(R.id.go_sign_up_btn);
+        mImageBtnServerSetting = findViewById(R.id.login_server_setting);
         BarUtils.addMarginTopEqualStatusBarHeight(mImageViewLog);
-        InitLogin();
+        initLogin();
     }
 
-    protected void InitLogin() {
+
+    protected void initLogin() {
         handler = new Handler();
         setListener();
     }
@@ -84,6 +90,7 @@ public class Login extends AppCompatActivity {
         mTxtBtnLoginGO.setOnClickListener(onclick);
         mTxtBtnRegister.setOnClickListener(onclick);
         mTxtBtnForget.setOnClickListener(onclick);
+        mImageBtnServerSetting.setOnClickListener(onclick);
     }
 
     @Override
@@ -250,6 +257,62 @@ public class Login extends AppCompatActivity {
                         Intent intent = new Intent(Login.this, SeekAcounts.class);
                         startActivity(intent);
                     });
+                    break;
+                }
+                case R.id.login_server_setting: {
+                    MessageDialog.show("Server Setting", "Please Enter Server IP and Port", "OK", "Cancel")
+                            .setCustomView(new OnBindView<MessageDialog>(R.layout.login_server_setting_dialog) {
+                                @Override
+                                public void onBind(MessageDialog dialog, View v) {
+                                    TextInputEditText mEditTxtServerIp =  findViewById(R.id.login_server_ip_setting);
+                                    TextInputEditText mEditTxtServerPort = findViewById(R.id.login_server_port_setting);
+                                    String serverIp = SPUtils.getInstance(Constants.GLCC_SERVER_SETTING_TAG).getString("serverIp");
+                                    int serverPort = SPUtils.getInstance(Constants.GLCC_SERVER_SETTING_TAG).getInt("serverPort");
+                                    if (!ObjectUtils.isEmpty(serverIp)) {
+                                        mEditTxtServerIp.setText(serverIp);
+                                    } else {
+                                        mEditTxtServerIp.setText(Constants.GLCC_SERVER_IP);
+                                    }
+
+                                    if (!ObjectUtils.isEmpty(serverPort) && serverPort != -1) {
+                                        mEditTxtServerPort.setText(serverPort + "");
+                                    } else {
+                                        mEditTxtServerPort.setText(Constants.GLCC_SERVER_PORT + "");
+                                    }
+                                }
+                            })
+                            .setOkButton(new OnDialogButtonClickListener<MessageDialog>() {
+                                @Override
+                                public boolean onClick(MessageDialog baseDialog, View v) {
+                                    TextInputEditText mEditTxtServerIp =  findViewById(R.id.login_server_ip_setting);
+                                    TextInputEditText mEditTxtServerPort = findViewById(R.id.login_server_port_setting);
+                                    String serverIp = Objects.requireNonNull(mEditTxtServerIp.getText()).toString();
+                                    String serverPortStr = Objects.requireNonNull(mEditTxtServerPort.getText()).toString();
+                                    if (!ObjectUtils.isEmpty(serverIp) || (!ObjectUtils.isEmpty(serverPortStr))) {
+                                        int serverPort = Integer.parseInt(Objects.requireNonNull(mEditTxtServerPort.getText()).toString());
+                                        if (!ObjectUtils.isEmpty(serverIp)) {
+                                            SPUtils.getInstance(Constants.GLCC_SERVER_SETTING_TAG).put("serverIp", serverIp);
+                                            Constants.GLCC_SERVER_IP = serverIp;
+                                        }
+                                        if (!ObjectUtils.isEmpty(serverPort) && serverPort != -1) {
+                                            SPUtils.getInstance(Constants.GLCC_SERVER_SETTING_TAG).put("serverPort", serverPort);
+                                            Constants.GLCC_SERVER_PORT = serverPort;
+                                        }
+                                        Constants.reLoadData();
+                                        return false;
+                                    } else {
+                                        Toast.makeText(Login.this, "IP or Port can't be empty at time", Toast.LENGTH_SHORT).show();
+                                        return true;
+                                    }
+                                }
+                            })
+                            .setCancelButton(new OnDialogButtonClickListener<MessageDialog>() {
+                                @Override
+                                public boolean onClick(MessageDialog baseDialog, View v) {
+                                    return false;
+                                }
+                            });
+
                     break;
                 }
                 default:

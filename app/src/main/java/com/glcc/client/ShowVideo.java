@@ -25,7 +25,7 @@ import android.graphics.Path;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.transition.Scene;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
@@ -58,15 +58,17 @@ import com.glcc.client.manager.VideoRecorderModel;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.kongzue.dialogx.dialogs.BottomDialog;
+import com.kongzue.dialogx.dialogs.InputDialog;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.PopMenu;
 import com.kongzue.dialogx.dialogs.PopNotification;
 import com.kongzue.dialogx.dialogs.PopTip;
-import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.interfaces.OnBackPressedListener;
 import com.kongzue.dialogx.interfaces.OnBindView;
 import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
+import com.kongzue.dialogx.interfaces.OnInputDialogButtonClickListener;
 import com.kongzue.dialogx.interfaces.OnMenuItemClickListener;
+import com.kongzue.dialogx.util.InputInfo;
 import com.tencent.live2.V2TXLiveDef;
 import com.tencent.live2.V2TXLivePlayer;
 import com.tencent.live2.V2TXLivePlayerObserver;
@@ -78,15 +80,11 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Callable;
@@ -126,6 +124,7 @@ public class ShowVideo extends AppCompatActivity {
     private final String infoMsg1 = "Welcome to Cat Cat Application";
     private final String infoMsg2 = "Take care of your cat";
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -134,6 +133,7 @@ public class ShowVideo extends AppCompatActivity {
         initialize();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void initialize() {
         Bundle bundle = getIntent().getBundleExtra("bundle");
         String login_username = bundle.getString("login_username");
@@ -196,7 +196,7 @@ public class ShowVideo extends AppCompatActivity {
             public void run() {
                 fetchVideoTimerTask.update();
             }
-        }, 1000 * 60 * 2,60 * 1000 * 5);
+        }, 2 * 1000 * 60,2 * 60 * 1000);
     }
 
 
@@ -207,25 +207,65 @@ public class ShowVideo extends AppCompatActivity {
         BarUtils.addMarginTopEqualStatusBarHeight(mVideoShowToolBar);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     protected void initNavigation() {
-        mVideoShowNavigationView = findViewById(R.id.video_show_navigation_view);
-        if (!ObjectUtils.isEmpty(SPUtils.getInstance(Constants.GLCC_NOTIFICATION_TAG).getBoolean("isNotifyInformation"))) {
-            isNotifyInformation = SPUtils.getInstance(Constants.GLCC_NOTIFICATION_TAG).getBoolean("isNotifyInformation");
-        }
         mVideoShowDrawerLayout = findViewById(R.id.video_show_drawerlayout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, mVideoShowDrawerLayout, mVideoShowToolBar,
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mVideoShowNavigationView = findViewById(R.id.video_show_navigation_view);
         mVideoShowNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
-                    case R.id.video_show_open_draw_lays:
+                    case R.id.video_show_open_notify:
                     {
                         setNotifyInformation(item);
                         break;
                     }
+                    case R.id.video_show_set_server:
+                    {
+                        MessageDialog.show("Server Setting", "Please enter play port: ", "OK", "Cancel")
+                                .setCustomView(new OnBindView<MessageDialog>(R.layout.video_show_server_play_setting_dialog) {
+                                    @Override
+                                    public void onBind(MessageDialog dialog, View v) {
+                                        TextInputEditText mEditTxtPlayPort = findViewById(R.id.video_show_server_play_port_setting);
+                                        int playPort = SPUtils.getInstance(Constants.GLCC_SERVER_SETTING_TAG).getInt("serverPortSetting");
+                                        if (!ObjectUtils.isEmpty(playPort) && playPort != -1) {
+                                            mEditTxtPlayPort.setText(playPort + "");
+                                        } else {
+                                            mEditTxtPlayPort.setText(Constants.GLCC_PLAYER_PORT + "");
+                                        }
+                                    }
+                                })
+                                .setOkButton(new OnDialogButtonClickListener<MessageDialog>() {
+                                    @Override
+                                    public boolean onClick(MessageDialog baseDialog, View v) {
+                                        TextInputEditText mEditTxtPlayPort = findViewById(R.id.video_show_server_play_port_setting);
+                                        String inputStr = Objects.requireNonNull(mEditTxtPlayPort.getText()).toString();
+                                        if (!ObjectUtils.isEmpty(inputStr)) {
+                                            Constants.GLCC_PLAYER_PORT = Integer.parseInt(inputStr);
+                                            SPUtils.getInstance(Constants.GLCC_SERVER_SETTING_TAG).put("serverPortSetting", Constants.GLCC_PLAYER_PORT);
+                                            Constants.reLoadData();
+                                        } else {
+                                            Toast.makeText(ShowVideo.this, "Port can't be empty!", Toast.LENGTH_SHORT).show();
+                                            return true;
+                                        }
+                                        return false;
+                                    }
+                                })
+                                .setCancelButton(new OnDialogButtonClickListener<MessageDialog>() {
+                                    @Override
+                                    public boolean onClick(MessageDialog baseDialog, View v) {
+                                        return false;
+                                    }
+                                });
+                        break;
+                    }
+                    default:
+                        throw new IllegalStateException("Unknown value " + item.getItemId());
+
                 }
                 return false;
             }
@@ -235,8 +275,39 @@ public class ShowVideo extends AppCompatActivity {
         TextView textView = headerView.findViewById(R.id.video_show_nav_user_nickname);
         String helloMsg = textView.getText().toString() + " " + userModel.getNickName();
         textView.setText(helloMsg);
-
         toggle.syncState();
+
+        if (!ObjectUtils.isEmpty(SPUtils.getInstance(Constants.GLCC_NOTIFICATION_TAG).getBoolean("isNotifyInformation"))) {
+            isNotifyInformation = SPUtils.getInstance(Constants.GLCC_NOTIFICATION_TAG).getBoolean("isNotifyInformation");
+        }
+        if (isNotifyInformation) {
+            if (!PermissionUtils.isGrantedDrawOverlays()) {
+                PermissionUtils.requestDrawOverlays(new PermissionUtils.SimpleCallback() {
+                    @Override
+                    public void onGranted() {
+                        isNotifyInformation = true;
+                    }
+
+                    @Override
+                    public void onDenied() {
+                        isNotifyInformation = false;
+                    }
+                });
+            }
+        }
+        MenuItem menuItem = mVideoShowNavigationView.getMenu().getItem(0);
+        if (isNotifyInformation) {
+            menuItem.setTitle(turnOffNotifications);
+        } else {
+            menuItem.setTitle(turnOnNotifications);
+        }
+
+        int serverPortSetting = SPUtils.getInstance(Constants.GLCC_SERVER_SETTING_TAG).getInt("serverPortSetting");
+        if (!ObjectUtils.isEmpty(serverPortSetting) && serverPortSetting != -1) {
+            Constants.GLCC_PLAYER_PORT = serverPortSetting;
+            Constants.reLoadData();
+        }
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -367,7 +438,6 @@ public class ShowVideo extends AppCompatActivity {
                                     register_video_info.put("user_name", userModel.getUserName());
                                     register_video_info.put("user_password", userModel.getPassword());
                                     ExecutorService executorService = Executors.newSingleThreadExecutor();
-                                    WaitDialog.show("Please wait...");
                                     Callable<Boolean> task = new Callable<Boolean>() {
                                         @Override
                                         public Boolean call() throws Exception {
@@ -393,7 +463,6 @@ public class ShowVideo extends AppCompatActivity {
                                                     videoModel.setVideoName(video_name);
                                                     videoModel.setVideoUrl(video_url);
                                                     videoModel.saveVideoModel(userModel.getUserName());
-                                                    mALivePlayer.firstFetch.put(videoModel.getVideoName(), true);
                                                     Log.d("ShowVideoThread", userModel.getUserName() + ":" + video_name + ":" + video_url);
                                                     return false;
                                                 } else {
@@ -405,15 +474,14 @@ public class ShowVideo extends AppCompatActivity {
                                             }
                                         }
                                     };
-                                    boolean state = false;
+//                                    boolean state = false;
                                     Future<Boolean> future = executorService.submit(task);
-                                    try {
-                                        state = future.get();
-                                    } catch (ExecutionException | InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                    WaitDialog.dismiss();
-                                    return state;
+//                                    try {
+//                                        state = future.get();
+//                                    } catch (ExecutionException | InterruptedException e) {
+//                                        e.printStackTrace();
+//                                    }
+                                    return false;
                                 }
                             }
                         })
@@ -479,12 +547,12 @@ public class ShowVideo extends AppCompatActivity {
                             };
                             boolean state = false;
                             Future<Boolean> future = executorService.submit(task);
-                            try {
-                                state = future.get();
-                            } catch (ExecutionException | InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            return state;
+//                            try {
+//                                state = future.get();
+//                            } catch (ExecutionException | InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
+                            return false;
                         }
                     })
                     .setCancelButton("Cancel",new OnDialogButtonClickListener<BottomDialog>() {
@@ -581,7 +649,6 @@ public class ShowVideo extends AppCompatActivity {
         private boolean mIsWiding = false;
         private boolean mIsDrawing = false;
         private boolean mIsPlayToolAppearing = false;
-        private Map<String, Boolean> firstFetch = new HashMap<>();
 
         MyLivePlayer(){
             mVideoView = findViewById(R.id.video_view);
@@ -617,21 +684,14 @@ public class ShowVideo extends AppCompatActivity {
             initPlayButton();
             initDrawButton();
             initLogInfo();
-            initFirstFetch();
             initVideoPlayLayout();
             startPlay();
         }
 
-        private void initFirstFetch() {
-            for (Map.Entry<String, VideoModel> elem : VideoModel.loadAllVideoModel(userModel.getUserName()).entrySet()) {
-                firstFetch.put(elem.getValue().getVideoName(), true);
-            }
-        }
 
         protected void initPlayView() {
             mVideoView.setLogMargin(12, 12, 110, 60);
             mVideoView.showLog(true);
-//            mLivePlayer.setRenderView(mVideoView);
             mLivePlayer = new V2TXLivePlayerImpl(ShowVideo.this);
         }
 
@@ -1040,61 +1100,56 @@ public class ShowVideo extends AppCompatActivity {
 
         public boolean fetchDetectVideo(VideoModel videoModel) {
             if (!ObjectUtils.isEmpty(videoModel)) {
-                if (Boolean.TRUE.equals(firstFetch.get(videoModel.getVideoName()))) {
-                    JSONObject json = new JSONObject();
-                    json.put("video_url", videoModel.getVideoUrl());
-                    json.put("video_name", videoModel.getVideoName());
-                    json.put("user_name", userModel.getUserName());
-                    json.put("user_password", userModel.getPassword());
-                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                    Callable<Boolean> task = new Callable<Boolean>() {
-                        @Override
-                        public Boolean call() throws Exception {
-                            Response response = GLCCClient.doCommonPost(Constants.GLCC_DECT_VIDEO_URL, json.toString());
-                            if (ObjectUtils.isEmpty(response)) {
+                JSONObject json = new JSONObject();
+                json.put("video_url", videoModel.getVideoUrl());
+                json.put("video_name", videoModel.getVideoName());
+                json.put("user_name", userModel.getUserName());
+                json.put("user_password", userModel.getPassword());
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                Callable<Boolean> task = new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() throws Exception {
+                        Response response = GLCCClient.doCommonPost(Constants.GLCC_DECT_VIDEO_URL, json.toString());
+                        if (ObjectUtils.isEmpty(response)) {
+                            handler.post(() -> {
+                                Toast.makeText(ShowVideo.this, "Video Request Error!", Toast.LENGTH_SHORT).show();
+                                stopPlay();
+                            });
+                            return false;
+                        } else {
+                            if (response.code() == 200) {
+                                String body = null;
+                                try {
+                                    body = response.body().string();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                JSONObject resp = JSONObject.fromObject(body);
+                                String room_name = resp.getString("room_name");
+                                // TODO: More General (flv to any type)
+                                String room_url = String.format("%s/%s.flv", Constants.GLCC_VIDEO_PLAYER_BASE_URL, room_name);
+                                videoModel.setRoomUrl(room_url);
+                                videoModel.saveVideoModel(userModel.getUserName());
+                                return true;
+                            } else {
                                 handler.post(() -> {
-                                    Toast.makeText(ShowVideo.this, "Video Request Error!", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(ShowVideo.this, "Video Show Error", Toast.LENGTH_SHORT).show();
                                     stopPlay();
                                 });
                                 return false;
-                            } else {
-                                if (response.code() == 200) {
-                                    String body = null;
-                                    try {
-                                        body = response.body().string();
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                    JSONObject response_map = JSONObject.fromObject(body);
-                                    String room_name = response_map.getString("room_name");
-                                    // TODO: More General (flv to any type)
-                                    String room_url = String.format("%s/%s.flv", Constants.GLCC_VIDEO_PLAYER_BASE_URL, room_name);
-                                    videoModel.setRoomUrl(room_url);
-                                    videoModel.saveVideoModel(userModel.getUserName());
-                                    firstFetch.put(videoModel.getVideoName(), false);
-                                    return true;
-                                } else {
-                                    handler.post(() -> {
-                                        Toast.makeText(ShowVideo.this, "Video Show Error", Toast.LENGTH_SHORT).show();
-                                        stopPlay();
-                                    });
-                                    return false;
-                                }
                             }
                         }
-                    };
-
-                    Future<Boolean> future = executor.submit(task);
-                    boolean state = false;
-                    try {
-                        state = future.get();
-                    } catch (ExecutionException | InterruptedException e) {
-                        e.printStackTrace();
                     }
-                    return state;
-                } else {
-                    return true;
+                };
+
+                Future<Boolean> future = executor.submit(task);
+                boolean state = false;
+                try {
+                    state = future.get();
+                } catch (ExecutionException | InterruptedException e) {
+                    e.printStackTrace();
                 }
+                return state;
             } else {
                 return false;
             }
@@ -1222,10 +1277,6 @@ public class ShowVideo extends AppCompatActivity {
                     }
                     case R.id.video_play_fetch: {
                         if (!ObjectUtils.isEmpty(mSpinnerVideoSource.getSelectedItem())) {
-                            String video_name = mSpinnerVideoSource.getSelectedItem().toString();
-                            if (!ObjectUtils.isEmpty(video_name)) {
-                                firstFetch.put(video_name, true);
-                            }
                             stopPlay();
                             startPlay();
                         }
@@ -1406,19 +1457,12 @@ public class ShowVideo extends AppCompatActivity {
                 Log.w(TAG, "[Player] onWarning: player-" + player + " code-" + code + " msg-" + msg + " info-" + extrainfo);
                 Log.d(TAG, "My: Code: " + code);
                 String videoName = mSpinnerVideoSource.getSelectedItem().toString();
-                if (!ObjectUtils.isEmpty(videoName)) {
-                    firstFetch.put(videoName, true);
-                }
-//                stopPlay();
             }
 
             @Override
             public void onError(V2TXLivePlayer player, int code, String msg, Bundle extrainfo) {
                 Log.e(TAG, "[Player] onError: player-" + player + " code-" + code + " msg-" + msg + " info-" + extrainfo);
                 String videoName = mSpinnerVideoSource.getSelectedItem().toString();
-                if (!ObjectUtils.isEmpty(videoName)) {
-                    firstFetch.put(videoName, true);
-                }
                 stopPlay();
             }
 
@@ -1524,6 +1568,7 @@ public class ShowVideo extends AppCompatActivity {
                     handler.post(()->{
                         Toast.makeText(ShowVideo.this, "Request Error!", Toast.LENGTH_SHORT).show();
                     });
+                    return null;
                 } else {
                     if (response.code() == 200) {
                         String body = null;
@@ -1625,7 +1670,11 @@ public class ShowVideo extends AppCompatActivity {
                                     videoRecyclerViewItemList.add(child);
                                 }
                             }
+                        } else {
+                            return null;
                         }
+                    } else {
+                        return null;
                     }
                 }
             }
@@ -1644,10 +1693,16 @@ public class ShowVideo extends AppCompatActivity {
                 videoNameList.add(item.getValue().getVideoName());
             }
             List<VideoRecyclerViewAdapter.ViewItem> videoRecyclerViewItemList = fetchVideo(videoNameList);
+
+            if (ObjectUtils.isEmpty(videoRecyclerViewItemList)) {
+                videoRecyclerViewItemList = new ArrayList<>();
+            }
+            List<VideoRecyclerViewAdapter.ViewItem> finalVideoRecyclerViewItemList = videoRecyclerViewItemList;
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    mVideoRecyclerViewAdapter = new VideoRecyclerViewAdapter(videoRecyclerViewItemList);
+
+                    mVideoRecyclerViewAdapter = new VideoRecyclerViewAdapter(finalVideoRecyclerViewItemList);
                     mVideoRecyclerViewLayoutManger = new LinearLayoutManager(
                             ShowVideo.this, LinearLayoutManager.VERTICAL, false);
                     mVideoRecyclerView = findViewById(R.id.recorder_video_recycler_view);
@@ -1656,7 +1711,6 @@ public class ShowVideo extends AppCompatActivity {
                     mVideoRecyclerView.addItemDecoration(new DividerItemDecoration(
                             ShowVideo.this, DividerItemDecoration.VERTICAL));
                     mVideoRecyclerViewAdapter.setOnItemClickListener(new RecyclerViewOnClick());
-//                mVideoRecyclerView.requestFocus();
                     mVideoRecyclerViewAdapter.setOnImageViewClickListener(new ClickUtils.OnDebouncingClickListener() {
                         @Override
                         public void onDebouncingClick(View v) {
@@ -1681,7 +1735,6 @@ public class ShowVideo extends AppCompatActivity {
                     });
                     videoRecyclerLoading.clearAnimation();
                     videoRecyclerLoading.setVisibility(View.GONE);
-
                 }
             });
         }
@@ -1694,18 +1747,20 @@ public class ShowVideo extends AppCompatActivity {
             }
             List<VideoRecyclerViewAdapter.ViewItem> newVideoRecyclerViewItemList = fetchVideo(videoNameList);
 
-            if (isNotifyInformation) {
-                if (newVideoRecyclerViewItemList.size() > mVideoRecyclerViewAdapter.getAllDataItem().size()) {
-                    handler.post(()->{
-                        PopNotification.show(R.drawable.notify_small, "The cat may be in danger...")
-                                .setAutoTintIconInLightOrDarkMode(false).showLong();
-                    });
+            if (!ObjectUtils.isEmpty(newVideoRecyclerViewItemList)) {
+                if (isNotifyInformation) {
+                    if (newVideoRecyclerViewItemList.size() > mVideoRecyclerViewAdapter.getAllDataItem().size()) {
+                        handler.post(()->{
+                            PopNotification.show(R.drawable.notify_small, "The cat may be in danger...")
+                                    .setAutoTintIconInLightOrDarkMode(false).autoDismiss(8000);
+                        });
+                    }
                 }
+                mVideoRecyclerViewAdapter.setDataItem(newVideoRecyclerViewItemList);
+                handler.post(()->{
+                    mVideoRecyclerViewAdapter.notifyDataSetChanged();
+                });
             }
-            mVideoRecyclerViewAdapter.setDataItem(newVideoRecyclerViewItemList);
-            handler.post(()->{
-                mVideoRecyclerViewAdapter.notifyDataSetChanged();
-            });
         }
     }
 
@@ -2111,6 +2166,24 @@ public class ShowVideo extends AppCompatActivity {
                         break;
                     }
                     case R.id.video_file_play_fetch: {
+                        new Thread(()->{
+                            JSONObject reqBody = new JSONObject();
+                            reqBody.put("user_name", userModel.getUserName());
+                            reqBody.put("user_password", userModel.getPassword());
+                            reqBody.put("room_name", roomName);
+                            Response response = GLCCClient.doCommonPost(
+                                    Constants.GLCC_KICK_DECT_VIDEO_FILE_URL, reqBody.toString());
+                            if (ObjectUtils.isEmpty(response)) {
+                                Log.d(TAG, "Kick video room_name " + roomName + " fail!");
+                            } else {
+                                if (response.code() == 200) {
+                                    Log.d(TAG, "Kick video room_name " + roomName + " success!");
+                                } else {
+                                    Log.d(TAG, "Kick video room_name " + roomName + " fail!");
+                                }
+                            }
+                        }).start();
+                        mVideoFileLivePlayer.stopPlay();
                         fetchVideo();
                         break;
                     }
