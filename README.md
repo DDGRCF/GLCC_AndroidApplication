@@ -13,7 +13,7 @@
 # Cat Cat | MMDeply $\times$ GLCC 开源项目 | MMDeploy 实践
 
 <p align="center">
-    <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/system-linux-blue' alt="System"></a>  
+    <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/system-android-blue' alt="System"></a>  
     &nbsp;
     <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/role-client-green' alt="Role"></a>
     &nbsp;
