@@ -177,7 +177,7 @@ public class ShowVideo extends AppCompatActivity {
                 }
             }
             }
-        }, 1000 * 60, 1000 * 60);
+        }, 1000 * 30, 1000 * 30);
     }
 
     private void initVideoRecycleView() {
@@ -196,7 +196,7 @@ public class ShowVideo extends AppCompatActivity {
             public void run() {
                 fetchVideoTimerTask.update();
             }
-        }, 2 * 1000 * 60,2 * 60 * 1000);
+        }, 1000 * 30,30 * 1000);
     }
 
 
@@ -1751,8 +1751,8 @@ public class ShowVideo extends AppCompatActivity {
                 if (isNotifyInformation) {
                     if (newVideoRecyclerViewItemList.size() > mVideoRecyclerViewAdapter.getAllDataItem().size()) {
                         handler.post(()->{
-                            PopNotification.show(R.drawable.notify_small, "The cat may be in danger...")
-                                    .setAutoTintIconInLightOrDarkMode(false).autoDismiss(8000);
+                            PopNotification.show("The Cat May Be In Danger!")
+                                    .setAutoTintIconInLightOrDarkMode(true).autoDismiss(8000);
                         });
                     }
                 }

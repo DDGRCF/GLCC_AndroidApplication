@@ -42,6 +42,7 @@ import java.util.Objects;
 import com.blankj.utilcode.util.ObjectUtils;
 import com.blankj.utilcode.util.ClickUtils;
 import com.kongzue.dialogx.dialogs.MessageDialog;
+import com.kongzue.dialogx.dialogs.PopNotification;
 import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.interfaces.OnBindView;
 import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
