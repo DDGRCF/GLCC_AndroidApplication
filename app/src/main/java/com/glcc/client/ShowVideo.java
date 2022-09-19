@@ -1751,8 +1751,12 @@ public class ShowVideo extends AppCompatActivity {
                 if (isNotifyInformation) {
                     if (newVideoRecyclerViewItemList.size() > mVideoRecyclerViewAdapter.getAllDataItem().size()) {
                         handler.post(()->{
-                            PopNotification.show("The Cat May Be In Danger!")
-                                    .setAutoTintIconInLightOrDarkMode(true).autoDismiss(8000);
+                            PopNotification.build(new OnBindView<PopNotification>(R.layout.video_show_notification) {
+                                @Override
+                                public void onBind(PopNotification dialog, View v) {
+
+                                }
+                            }).show().autoDismiss(8000);
                         });
                     }
                 }

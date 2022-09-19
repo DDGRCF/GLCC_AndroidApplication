@@ -34,7 +34,8 @@ dependencies {
     implementation ('net.sf.json-lib:json-lib:2.4:jdk15'){
         exclude group: 'commons-beanutils'
     }
-    implementation 'com.tencent.liteav:LiteAVSDK_Professional:latest.release' // Tencent
+//    implementation 'com.tencent.liteav:LiteAVSDK_Professional:latest.release' // Tencent
+    implementation 'com.tencent.liteav:LiteAVSDK_Professional:10.6.0.11182' // Tencent
     implementation 'androidx.appcompat:appcompat:1.4.2'
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
