@@ -10,7 +10,11 @@
 </div>
 </div>
 
-# Cat Cat | MMDeply $\times$ GLCC 开源项目 | MMDeploy 实践
+<h1 align="center">
+
+Cat Cat | MMDeply $\times$ GLCC 开源项目 | MMDeploy 实践
+
+</h1>
 
 <p align="center">
     <a href='https://github.com/DDGRCF/GLCC_Server'><img src='https://img.shields.io/badge/system-android-blue' alt="System"></a>  

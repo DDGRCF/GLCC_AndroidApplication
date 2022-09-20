@@ -196,7 +196,7 @@ public class ShowVideo extends AppCompatActivity {
             public void run() {
                 fetchVideoTimerTask.update();
             }
-        }, 1000 * 30,30 * 1000);
+        }, 1000 * 60,60 * 1000);
     }
 
 
