@@ -37,8 +37,28 @@ Cat Cat | MMDeply $\times$ GLCC 开源项目 | MMDeploy 实践
 目前，该项目包括两个部分:
 
 * [能够响应Http请求，完成检测跟踪的服务器](https://github.com/DDGRCF/GLCC_Server)
-* **能够发起Http请求，完成实现播放的客服端**⬅️ **(目前位置)**
+* **能够发起Http请求，完成实现播放的客服端**👈 **目前位置**
 
+**✨服务器目前支持的功能:**
+
+- [x] 响应基础的Http请求    
+- [x] 猫猫检测和跟踪 
+- [x] 猫猫的越线检测
+- [x] 猫猫的越线时间点视频的记录
+- [x] 监控的直播视频流的推送
+- [x] 监控的文件视频流的推送
+- [x] 提供配置文件可拓展其他类别
+- [ ] 加载SSL证书 
+ 
+**✨客服端目前完成的功能:**
+
+- [x] 发起基础的Http请求
+- [x] 用户登录注册
+- [x] 视频源登录删除
+- [x] 猫猫监控的直播视频流的拉取
+- [x] 猫猫记录的文件视频流的拉取
+- [x] 支持服务器配置端口，IP等信息
+- [ ] 加载SSL证书
 
 # 预览
 
@@ -49,6 +69,9 @@ Cat Cat | MMDeply $\times$ GLCC 开源项目 | MMDeploy 实践
 
 ## 客服端
 <img src="./asserts/clientInstanceSplash.jpg" width="190" height = "411" alt="server-Instance"/>  <img src="./asserts/clientInstanceLogin.jpg" width="190" height = "411" alt="server-Instance"/>  <img src="./asserts/clientInstanceRegister.jpg" width="190" height = "411" alt="server-Instance"/>  <img src="./asserts/clientInstance.gif" width="190" height = "411" alt="server-Instance"/>
+
+# 工作流程
+<img src="./asserts/glccWorkflow.png" width="800" alt="glcc-workflow"/>
 
 # 安装
 ### 环境依赖
