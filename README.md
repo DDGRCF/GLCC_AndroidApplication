@@ -89,3 +89,6 @@ Cat Cat | MMDeply $\times$ GLCC 开源项目 | MMDeploy 实践
 * [AnroidUtilCode](https://github.com/Blankj/AndroidUtilCode)
 * [DiglogX](https://github.com/kongzue/DialogX)
 * [Fab](https://github.com/Clans/FloatingActionButton)
+
+# 技术交流
+<img src="./asserts/weixing.jpg" width="200" alt="weixing"/>
